@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LexQuest — English Mastery Game</title>
+<meta name="description" content="LexQuest: discover, practice, and master English vocabulary through varied micro-challenges and boss battles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================= TOKENS ============================= */
+:root{
+  --bg:#0B0D12;
+  --surface:#14171F;
+  --surface-2:#1B1F2A;
+  --accent:#6C5CE7;
+  --accent-2:#8B7FF0;
+  --success:#00D9C0;
+  --danger:#FF5470;
+  --text:#E8E9F3;
+  --muted:#8A8DA0;
+  --border:rgba(232,233,243,0.09);
+  --glow:0 0 0 1px rgba(108,92,231,0.18), 0 8px 30px -8px rgba(108,92,231,0.35);
+  --radius:14px;
+  --radius-lg:20px;
+  --font-ui:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-display:'Fraunces',Georgia,serif;
+  --ease:cubic-bezier(.2,.7,.3,1);
+}
+[data-theme="light"]{
+  --bg:#F7F7FB;
+  --surface:#FFFFFF;
+  --surface-2:#F0EFF9;
+  --accent:#5B4BD6;
+  --accent-2:#4638B8;
+  --success:#00A895;
+  --danger:#E23A57;
+  --text:#12131A;
+  --muted:#5B5D70;
+  --border:rgba(18,19,26,0.09);
+  --glow:0 0 0 1px rgba(91,75,214,0.12), 0 8px 24px -10px rgba(91,75,214,0.25);
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-ui);
+  min-height:100vh;
+  transition:background .25s var(--ease),color .25s var(--ease);
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}
+}
+h1,h2,h3{font-family:var(--font-display);margin:0;letter-spacing:-0.01em;}
+p{margin:0;}
+button{font-family:inherit;}
+a{color:inherit;}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px;border-radius:6px;}
+
+/* ============================= LAYOUT ============================= */
+#app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:600;font-size:1.15rem;}
+.brand .mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--success));flex:none;}
+.topbar-stats{display:flex;gap:14px;align-items:center;font-size:.85rem;color:var(--muted);}
+.stat-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);padding:6px 10px;border-radius:999px;}
+.stat-pill strong{color:var(--text);font-weight:700;}
+main{flex:1;padding:20px 18px 90px;}
+.screen{animation:fadein .35s var(--ease);}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+nav.bottomnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:20;
+  display:flex;justify-content:center;
+  background:color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter:blur(10px);border-top:1px solid var(--border);
+}
+.bottomnav-inner{max-width:720px;width:100%;display:grid;grid-template-columns:repeat(4,1fr);}
+.navbtn{
+  background:none;border:none;color:var(--muted);padding:10px 4px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.68rem;font-weight:600;
+  cursor:pointer;transition:color .15s;
+}
+.navbtn.active{color:var(--accent-2);}
+.navbtn svg{width:20px;height:20px;}
+
+/* ============================= COMPONENTS ============================= */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:20px;
+}
+.card + .card{margin-top:14px;}
+.glow{box-shadow:var(--glow);}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;border-radius:12px;
+  padding:13px 20px;font-weight:700;font-size:.95rem;cursor:pointer;
+  transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s;
+  min-height:48px;
+}
+.btn:hover{background:var(--accent-2);transform:scale(1.02);}
+.btn:active{transform:scale(.98);}
+.btn.secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--border);}
+.btn.secondary:hover{background:var(--surface);}
+.btn.block{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn.success{background:var(--success);color:#03251f;}
+.btn.danger{background:var(--danger);}
+
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.7rem;font-weight:700;color:var(--accent-2);}
+.muted{color:var(--muted);}
+.section-title{font-size:1.4rem;margin-bottom:4px;}
+.progressbar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border);}
+.progressbar > span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--success));border-radius:99px;transition:width .5s var(--ease);}
+
+.choice-grid{display:grid;gap:10px;margin-top:16px;}
+.choice{
+  text-align:left;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+  padding:14px 16px;font-size:1rem;font-weight:600;cursor:pointer;color:var(--text);
+  transition:border-color .15s,transform .1s,background .15s;
+}
+.choice:hover{border-color:var(--accent);}
+.choice.correct{border-color:var(--success);background:color-mix(in srgb, var(--success) 14%, var(--surface));}
+.choice.incorrect{border-color:var(--danger);background:color-mix(in srgb, var(--danger) 14%, var(--surface));}
+.choice:disabled{cursor:default;}
+
+.token{
+  display:inline-block;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;margin:3px;font-size:1.05rem;cursor:pointer;font-weight:600;transition:all .15s;
+}
+.token:hover{border-color:var(--accent);}
+.token.correct{background:color-mix(in srgb, var(--success) 20%, var(--surface));border-color:var(--success);}
+.token.incorrect{background:color-mix(in srgb, var(--danger) 20%, var(--surface));border-color:var(--danger);}
+.sentence-box{font-size:1.15rem;line-height:2.1;font-family:var(--font-display);}
+
+.feedback{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:.9rem;font-weight:600;display:none;}
+.feedback.show{display:block;animation:fadein .25s var(--ease);}
+.feedback.good{background:color-mix(in srgb, var(--success) 16%, transparent);color:var(--success);}
+.feedback.bad{background:color-mix(in srgb, var(--danger) 16%, transparent);color:var(--danger);}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted);border:1px solid var(--border);}
+.wordcard-title{font-size:2rem;margin:2px 0;}
+.pron{color:var(--accent-2);font-size:.95rem;}
+
+.timerbar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-bottom:14px;border:1px solid var(--border);}
+.timerbar > span{display:block;height:100%;background:var(--danger);transition:width .1s linear;}
+
+.dex-grid{display:grid;gap:10px;}
+.dex-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;width:100%;}
+.dex-item:hover{border-color:var(--accent);}
+.dex-mastery{width:60px;flex:none;}
+
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.settings-row:last-child{border-bottom:none;}
+.toggle{
+  width:46px;height:26px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;
+  position:relative;cursor:pointer;flex:none;
+}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:var(--muted);border-radius:50%;transition:transform .2s var(--ease),background .2s;}
+.toggle.on{background:var(--accent);}
+.toggle.on::after{transform:translateX(20px);background:#fff;}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.hero{
+  background:radial-gradient(120% 140% at 20% -10%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 60%),var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 20px;position:relative;overflow:hidden;
+}
+.map-dots{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+.map-dot{width:12px;height:12px;border-radius:3px;background:var(--surface-2);border:1px solid var(--border);}
+.map-dot.lit{background:var(--success);border-color:var(--success);}
+
+.result-hero{text-align:center;padding:30px 20px;}
+.result-num{font-family:var(--font-display);font-size:3rem;font-weight:600;color:var(--accent-2);}
+
+@media (min-width:640px){
+  .choice-grid{grid-template-columns:1fr 1fr;}
+  .wordcard-title{font-size:2.4rem;}
+}
+</style>
+</head>
+<body data-theme="dark">
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span class="mark" aria-hidden="true"></span>LexQuest</div>
+    <div class="topbar-stats">
+      <span class="stat-pill" title="Day streak">🔥 <strong id="stat-streak">0</strong></span>
+      <span class="stat-pill" title="Experience points">✦ <strong id="stat-xp">0</strong></span>
+    </div>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <nav class="bottomnav" aria-label="Primary">
+    <div class="bottomnav-inner">
+      <button class="navbtn" data-route="home" aria-label="Home">🏠<span>Home</span></button>
+      <button class="navbtn" data-route="daily" aria-label="Daily Review">📅<span>Daily</span></button>
+      <button class="navbtn" data-route="collection" aria-label="Word Collection">📖<span>Dex</span></button>
+      <button class="navbtn" data-route="settings" aria-label="Settings">⚙️<span>Settings</span></button>
+    </div>
+  </nav>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================= DATA: GREETINGS TOPIC (A1, 20 words) ============================= */
+var WORDS = [
+  {id:"greet_001",word:"hello",lemma:"hello",pos:"interjection",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A friendly word used to greet someone.",example:"Hello! How are you today?",
+   pronunciation:"/hə-LOH/",synonyms:["hi","hey"],antonyms:["goodbye"],
+   collocations:["say hello","hello there"],register:"neutral",
+   commonMistake:"Use \"say hello,\" not \"tell hello,\" when talking about greeting someone.",
+   relatedWords:["hi","greeting"],difficulty:1,tags:["greeting","opener"]},
+  {id:"greet_002",word:"goodbye",lemma:"goodbye",pos:"interjection",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A word used when leaving or ending a conversation.",example:"Goodbye! See you tomorrow.",
+   pronunciation:"/good-BY/",synonyms:["bye","farewell"],antonyms:["hello"],
+   collocations:["say goodbye","wave goodbye"],register:"neutral",
+   commonMistake:"\"Goodbye\" is one word — not \"good bye.\"",
+   relatedWords:["bye","farewell"],difficulty:1,tags:["greeting","closer"]},
+  {id:"greet_003",word:"please",lemma:"please",pos:"adverb",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A polite word used when asking for something.",example:"Can I have some water, please?",
+   pronunciation:"/pleez/",synonyms:["kindly"],antonyms:[],
+   collocations:["yes, please","please and thank you"],register:"neutral",
+   commonMistake:"Don't repeat \"please\" twice in one sentence — it sounds unnatural.",
+   relatedWords:["pleasant"],difficulty:1,tags:["politeness"]},
+  {id:"greet_004",word:"thank you",lemma:"thank you",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"Words used to show gratitude.",example:"Thank you for your help.",
+   pronunciation:"/thangk yoo/",synonyms:["thanks","much appreciated"],antonyms:[],
+   collocations:["thank you very much","say thank you"],register:"neutral",
+   commonMistake:"It's \"thank you,\" not \"thanks you\" — that mixes up two correct forms.",
+   relatedWords:["gratitude","grateful"],difficulty:1,tags:["politeness"]},
+  {id:"greet_005",word:"sorry",lemma:"sorry",pos:"adjective",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A word used to apologize or show regret.",example:"I'm sorry I'm late.",
+   pronunciation:"/SOR-ee/",synonyms:["apologetic"],antonyms:[],
+   collocations:["so sorry","sorry about that"],register:"neutral",
+   commonMistake:"Say \"sorry I'm late,\" not \"sorry for late.\"",
+   relatedWords:["apology","apologize"],difficulty:2,tags:["politeness"]},
+  {id:"greet_006",word:"excuse me",lemma:"excuse me",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A polite phrase used to get attention or for a small interruption.",
+   example:"Excuse me, could you help me?",
+   pronunciation:"/ik-SKYOOZ mee/",synonyms:["pardon me"],antonyms:[],
+   collocations:["excuse me for a moment","excuse me, please"],register:"formal-neutral",
+   commonMistake:"\"Excuse me\" interrupts politely; \"sorry\" apologizes — they're not always interchangeable.",
+   relatedWords:["pardon"],difficulty:2,tags:["politeness","attention"]},
+  {id:"greet_007",word:"good morning",lemma:"good morning",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A greeting used in the morning.",example:"Good morning! Did you sleep well?",
+   pronunciation:"/good MOR-ning/",synonyms:["morning"],antonyms:["good night"],
+   collocations:["wish someone good morning","good morning, everyone"],register:"neutral",
+   commonMistake:"Only used until around midday, not in the afternoon.",
+   relatedWords:["morning"],difficulty:1,tags:["greeting","time-of-day"]},
+  {id:"greet_008",word:"good afternoon",lemma:"good afternoon",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A greeting used in the afternoon.",example:"Good afternoon, everyone.",
+   pronunciation:"/good af-ter-NOON/",synonyms:["afternoon"],antonyms:["good morning"],
+   collocations:["good afternoon, everyone"],register:"formal",
+   commonMistake:"Rarely used casually between friends — \"hi\" is more common informally.",
+   relatedWords:["afternoon"],difficulty:2,tags:["greeting","time-of-day"]},
+  {id:"greet_009",word:"good evening",lemma:"good evening",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A greeting used in the evening.",example:"Good evening, welcome to the show.",
+   pronunciation:"/good EEV-ning/",synonyms:["evening"],antonyms:["good morning"],
+   collocations:["good evening, everyone"],register:"formal",
+   commonMistake:"Not used for saying goodbye at night — that's \"good night.\"",
+   relatedWords:["evening"],difficulty:2,tags:["greeting","time-of-day"]},
+  {id:"greet_010",word:"good night",lemma:"good night",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"Words said when leaving at night or before sleeping.",example:"Good night, sleep well.",
+   pronunciation:"/good nyt/",synonyms:["nighty-night"],antonyms:["good morning"],
+   collocations:["say good night","good night, sleep well"],register:"neutral",
+   commonMistake:"\"Good night\" is a farewell, not a greeting — don't use it when arriving.",
+   relatedWords:["night"],difficulty:1,tags:["greeting","closer"]},
+  {id:"greet_011",word:"welcome",lemma:"welcome",pos:"verb",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"To greet someone arriving somewhere warmly.",example:"Welcome to our home!",
+   pronunciation:"/WEL-kuhm/",synonyms:["greet warmly"],antonyms:[],
+   collocations:["welcome to","you're welcome"],register:"neutral",
+   commonMistake:"\"You're welcome\" replies to thanks; \"welcome\" alone greets an arrival.",
+   relatedWords:["welcoming"],difficulty:2,tags:["greeting","hospitality"]},
+  {id:"greet_012",word:"nice to meet you",lemma:"nice to meet you",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"Said when meeting someone for the first time.",example:"Nice to meet you, I'm Anna.",
+   pronunciation:"/nys tuh meet yoo/",synonyms:["pleased to meet you"],antonyms:[],
+   collocations:["nice to meet you too"],register:"neutral",
+   commonMistake:"Only use for a first meeting — \"nice to see you\" is for people you already know.",
+   relatedWords:["meet"],difficulty:2,tags:["greeting","introduction"]},
+  {id:"greet_013",word:"how are you",lemma:"how are you",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A common question asking about someone's wellbeing.",example:"Hi, how are you today?",
+   pronunciation:"/how ar yoo/",synonyms:["how's it going"],antonyms:[],
+   collocations:["how are you doing"],register:"neutral",
+   commonMistake:"Often answered briefly (\"Fine, thanks!\") — it's a social ritual, not always literal.",
+   relatedWords:["wellbeing"],difficulty:1,tags:["greeting","small-talk"]},
+  {id:"greet_014",word:"fine",lemma:"fine",pos:"adjective",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A common reply meaning okay or well.",example:"I'm fine, thank you.",
+   pronunciation:"/fyn/",synonyms:["okay","well"],antonyms:["terrible","awful"],
+   collocations:["I'm fine, thanks"],register:"neutral",
+   commonMistake:"\"Fine\" can sound flat or annoyed in tone — smile or add detail to sound warmer.",
+   relatedWords:["well"],difficulty:1,tags:["small-talk"]},
+  {id:"greet_015",word:"see you later",lemma:"see you later",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"An informal way to say goodbye.",example:"See you later, alligator!",
+   pronunciation:"/see yoo LAY-ter/",synonyms:["catch you later"],antonyms:["hello"],
+   collocations:["see you soon"],register:"informal",
+   commonMistake:"Too casual for formal farewells — use \"goodbye\" with strangers or in business.",
+   relatedWords:["later"],difficulty:2,tags:["greeting","closer","informal"]},
+  {id:"greet_016",word:"take care",lemma:"take care",pos:"phrase",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A friendly way to say goodbye, wishing someone well.",
+   example:"Take care, and text me when you get home.",
+   pronunciation:"/tayk kair/",synonyms:["look after yourself"],antonyms:[],
+   collocations:["take care of yourself"],register:"neutral",
+   commonMistake:"\"Take care\" says goodbye; \"take care of\" means to look after something.",
+   relatedWords:["care"],difficulty:2,tags:["greeting","closer"]},
+  {id:"greet_017",word:"greet",lemma:"greet",pos:"verb",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"To say hello to someone or welcome them.",example:"Please greet him warmly at the door.",
+   pronunciation:"/greet/",synonyms:["welcome","hail"],antonyms:["ignore"],
+   collocations:["greet warmly","greet someone at the door"],register:"neutral",
+   commonMistake:"\"Greet\" needs an object — say \"greet him,\" not just \"greet.\"",
+   relatedWords:["greeting"],difficulty:2,tags:["verb","social"]},
+  {id:"greet_018",word:"introduce",lemma:"introduce",pos:"verb",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"To tell people each other's names when they meet for the first time.",
+   example:"Let me introduce you to my brother.",
+   pronunciation:"/in-truh-DOOS/",synonyms:["present"],antonyms:[],
+   collocations:["introduce yourself","introduce someone to"],register:"neutral",
+   commonMistake:"Say \"introduce myself,\" not \"introduce me,\" when talking about yourself.",
+   relatedWords:["introduction"],difficulty:2,tags:["verb","social"]},
+  {id:"greet_019",word:"handshake",lemma:"handshake",pos:"noun",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"A greeting where two people grip and shake each other's right hand.",
+   example:"They exchanged a firm handshake.",
+   pronunciation:"/HAND-shayk/",synonyms:[],antonyms:[],
+   collocations:["firm handshake","shake hands"],register:"neutral",
+   commonMistake:"The verb form is \"shake hands,\" not \"handshake\" used as a verb.",
+   relatedWords:["shake"],difficulty:2,tags:["noun","gesture"]},
+  {id:"greet_020",word:"wave",lemma:"wave",pos:"verb",level:"A1",topic:"greetings-basics",
+   simpleDefinition:"To move your hand from side to side as a greeting or goodbye.",
+   example:"Don't forget to wave when you say goodbye.",
+   pronunciation:"/wayv/",synonyms:["signal"],antonyms:[],
+   collocations:["wave goodbye","wave hello"],register:"neutral",
+   commonMistake:"A greeting \"wave\" is different from an ocean \"wave\" — context matters.",
+   relatedWords:["waving"],difficulty:1,tags:["verb","gesture"]}
+];
+
+var COLLOCATION_DUELS = {
+  greet_001:{correct:"say hello",wrong:"tell hello"},
+  greet_002:{correct:"wave goodbye",wrong:"wave a goodbye"},
+  greet_003:{correct:"yes, please",wrong:"yes, may please"},
+  greet_004:{correct:"thank you very much",wrong:"thanks you very much"},
+  greet_005:{correct:"so sorry",wrong:"too sorry"},
+  greet_006:{correct:"excuse me for a moment",wrong:"excuse me during a moment"},
+  greet_007:{correct:"good morning, everyone",wrong:"goodly morning, everyone"},
+  greet_008:{correct:"good afternoon, everyone",wrong:"well afternoon, everyone"},
+  greet_009:{correct:"good evening, everyone",wrong:"goodly evening, everyone"},
+  greet_010:{correct:"say good night",wrong:"say a good night"},
+  greet_011:{correct:"welcome to",wrong:"welcome for"},
+  greet_012:{correct:"nice to meet you too",wrong:"nice for meet you too"},
+  greet_013:{correct:"how are you doing",wrong:"how do you doing"},
+  greet_014:{correct:"I'm fine, thanks",wrong:"I'm fine, thank"},
+  greet_015:{correct:"see you soon",wrong:"see you the soon"},
+  greet_016:{correct:"take care of yourself",wrong:"take care for yourself"},
+  greet_017:{correct:"greet warmly",wrong:"greet warm"},
+  greet_018:{correct:"introduce yourself",wrong:"introduce you yourself"},
+  greet_019:{correct:"firm handshake",wrong:"hard handshake"},
+  greet_020:{correct:"wave hello",wrong:"wave a hello"}
+};
+
+var BOSS_ITEMS = [
+  {clumsy:"Hi, I am fine, bye.",
+   options:["Good morning! I'm doing well today. Take care!","Hi, I am fine, bye bye.","Hello good, I fine, goodbye good."],
+   correctIndex:0},
+  {clumsy:"Sorry, sorry, can you help?",
+   options:["Excuse me, could you please help me?","Sorry sorry sorry, help now?","I am very sorry can help?"],
+   correctIndex:0},
+  {clumsy:"Nice meet you, I am Anna.",
+   options:["Nice to meet you, I'm Anna.","Nice for meet you, I am the Anna.","Meet nice you, I Anna am."],
+   correctIndex:0},
+  {clumsy:"Thanks you, bye bye see you.",
+   options:["Thank you so much, see you later!","Thanks you very, bye see later you.","Thank you you, goodbye goodbye."],
+   correctIndex:0},
+  {clumsy:"Good the morning, how you?",
+   options:["Good morning! How are you today?","Good morning, how you doing today good?","Goodly morning, how you?"],
+   correctIndex:0}
+];
+
+var TOPIC = {id:"greetings-basics",title:"Greetings",level:"A1",description:"Master the words that open and close every English conversation.",words:WORDS};
+
+/* ============================= STATE STORE ============================= */
+var STORAGE_KEY = "lexquest_v1";
+var listeners = [];
+var state = loadState();
+
+function defaultState(){
+  return {theme:"dark",xp:0,streak:0,lastPlayedDate:null,words:{},topicsStarted:[],session:null};
+}
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    var parsed = JSON.parse(raw);
+    var d = defaultState();
+    for(var k in d){ if(!(k in parsed)) parsed[k]=d[k]; }
+    return parsed;
+  }catch(e){ return defaultState(); }
+}
+function persist(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function saveState(){
+  persist();
+  emit();
+}
+function emit(){ listeners.forEach(function(fn){ fn(state); }); render(); }
+function subscribe(fn){ listeners.push(fn); }
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function daysBetween(a,b){ return Math.round((new Date(b) - new Date(a)) / 86400000); }
+
+function touchStreak(){
+  var today = todayStr();
+  if(state.lastPlayedDate === today) return;
+  if(state.lastPlayedDate){
+    var diff = daysBetween(state.lastPlayedDate, today);
+    state.streak = (diff === 1) ? state.streak + 1 : 1;
+  } else {
+    state.streak = 1;
+  }
+  state.lastPlayedDate = today;
+}
+
+function addXP(n){ state.xp += n; }
+
+function getRecord(wordId){
+  if(!state.words[wordId]){
+    state.words[wordId] = {wordId:wordId,recognition:0,recall:0,contextual:0,production:0,
+      streak:0,ease:2.0,interval:0,lastSeen:null,nextDue:todayStr(),lapses:0,mechanicsSeen:[]};
+  }
+  return state.words[wordId];
+}
+
+var MECHANIC_SKILL = {recognitionQuiz:"recognition",sentenceRepair:"contextual",collocationDuel:"recall",boss:"production",discovery:null};
+
+function scoreAnswer(wordId, mechanic, isCorrect){
+  var rec = getRecord(wordId);
+  rec.lastSeen = todayStr();
+  if(mechanic !== "discovery" && rec.mechanicsSeen.indexOf(mechanic) === -1){
+    rec.mechanicsSeen.push(mechanic);
+  }
+  var skill = MECHANIC_SKILL[mechanic];
+  if(skill){
+    var cur = rec[skill] || 0;
+    rec[skill] = isCorrect ? Math.min(1, cur + 0.25) : Math.max(0, cur - 0.15);
+  }
+  if(isCorrect){
+    rec.streak += 1;
+    rec.ease = Math.min(3.0, rec.ease + 0.1);
+    rec.interval = rec.interval <= 0 ? 1 : Math.round(rec.interval * rec.ease);
+  } else {
+    rec.streak = 0;
+    rec.lapses += 1;
+    rec.ease = Math.max(1.3, rec.ease - 0.2);
+    rec.interval = 1;
+  }
+  var due = new Date();
+  due.setDate(due.getDate() + rec.interval);
+  rec.nextDue = due.toISOString().slice(0,10);
+  return rec;
+}
+
+function wordMastery(rec){
+  if(!rec) return 0;
+  return (rec.recognition + rec.recall + rec.contextual + rec.production) / 4;
+}
+function isMastered(rec){
+  return rec.recognition>=0.85 && rec.recall>=0.85 && rec.contextual>=0.85 && rec.production>=0.85;
+}
+function topicMasteryPct(){
+  var total=0, sum=0;
+  WORDS.forEach(function(w){ total++; sum += wordMastery(state.words[w.id]); });
+  return total ? Math.round((sum/total)*100) : 0;
+}
+function dueWordIds(){
+  var today = todayStr();
+  return Object.keys(state.words).filter(function(id){
+    return state.words[id].nextDue <= today;
+  });
+}
+
+/* ============================= UTIL ============================= */
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function pick(arr,n){ return shuffle(arr).slice(0,n); }
+function byId(id){ return WORDS.filter(function(w){return w.id===id;})[0]; }
+function el(tag, attrs, children){
+  var e = document.createElement(tag);
+  attrs = attrs || {};
+  for(var k in attrs){
+    if(attrs[k] === null || attrs[k] === undefined) continue;
+    if(k==="class") e.className = attrs[k];
+    else if(k==="html") e.innerHTML = attrs[k];
+    else if(k.indexOf("on")===0 && typeof attrs[k]==="function") e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  (children||[]).forEach(function(c){ if(c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return e;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* ============================= ROUTER ============================= */
+function currentRoute(){
+  var h = location.hash.replace(/^#\/?/, "") || "home";
+  return h.split("/")[0];
+}
+window.addEventListener("hashchange", render);
+
+/* ============================= SESSION / QUEST ENGINE ============================= */
+var MECHANIC_CYCLE = ["recognitionQuiz","sentenceRepair","collocationDuel"];
+
+function newSession(mode, wordIds){
+  var batchSize = mode === "daily" ? Math.max(wordIds.length,1) : 5;
+  state.session = {
+    mode: mode, // 'quest' | 'daily'
+    wordIds: wordIds,
+    batchIndex: 0,
+    batchSize: batchSize,
+    phase: mode === "daily" ? "challenge" : "discovery", // discovery -> challenge -> boss -> results
+    challengeIndex: 0,
+    correctCount: 0,
+    totalCount: 0,
+    xpEarned: 0,
+    currentDiscoveryIdx: 0,
+    challengePlan: mode === "daily" ? buildChallengePlan(wordIds) : []
+  };
+}
+
+function currentBatch(){
+  var s = state.session;
+  var start = s.batchIndex * s.batchSize;
+  return s.wordIds.slice(start, start + s.batchSize);
+}
+function totalBatches(){
+  var s = state.session;
+  return Math.ceil(s.wordIds.length / s.batchSize);
+}
+
+function buildChallengePlan(batchWordIds){
+  var plan = [];
+  batchWordIds.forEach(function(wid){
+    var rec = getRecord(wid);
+    var untried = MECHANIC_CYCLE.filter(function(m){ return rec.mechanicsSeen.indexOf(m) === -1; });
+    var order = untried.length ? untried.concat(shuffle(MECHANIC_CYCLE.filter(function(m){return untried.indexOf(m)===-1;}))) : shuffle(MECHANIC_CYCLE);
+    plan.push({wordId: wid, mechanic: order[0]});
+  });
+  return shuffle(plan);
+}
+
+/* ============================= RENDER: ROOT ============================= */
+function render(){
+  touchStreak();
+  persist();
+  document.body.setAttribute("data-theme", state.theme);
+  document.getElementById("stat-streak").textContent = state.streak;
+  document.getElementById("stat-xp").textContent = state.xp;
+  var main = document.getElementById("main");
+  main.innerHTML = "";
+  var route = currentRoute();
+  document.querySelectorAll(".navbtn").forEach(function(b){
+    b.classList.toggle("active", b.dataset.route === route);
+  });
+
+  if(state.session && (route === "quest" || route === "daily-play")){
+    renderSession(main);
+    return;
+  }
+
+  switch(route){
+    case "home": renderHome(main); break;
+    case "daily": renderDailyIntro(main); break;
+    case "collection": renderCollection(main); break;
+    case "settings": renderSettings(main); break;
+    case "worddetail": renderWordDetail(main, location.hash.split("/")[1]); break;
+    default: renderHome(main);
+  }
+  main.focus();
+}
+
+document.querySelectorAll(".navbtn").forEach(function(b){
+  b.addEventListener("click", function(){
+    state.session = null;
+    location.hash = "#/" + b.dataset.route;
+  });
+});
+
+/* ============================= HOME ============================= */
+function renderHome(main){
+  var pct = topicMasteryPct();
+  var due = dueWordIds().length;
+  var started = Object.keys(state.words).length > 0;
+
+  var wrap = el("div", {class:"screen"});
+
+  var hero = el("div", {class:"hero"});
+  hero.appendChild(el("p",{class:"eyebrow"},["Level A1 · Topic Quest"]));
+  hero.appendChild(el("h1",{class:"section-title"},["Greetings"]));
+  hero.appendChild(el("p",{class:"muted"},["Master the words that open and close every English conversation."]));
+  var barWrap = el("div",{style:"margin-top:16px;"});
+  var barLabel = el("div",{style:"display:flex;justify-content:space-between;margin-bottom:6px;font-size:.8rem;"},[
+    el("span",{class:"muted"},["Topic mastery"]), el("strong",{},[pct+"%"])
+  ]);
+  var bar = el("div",{class:"progressbar"},[el("span",{style:"width:"+pct+"%"})]);
+  barWrap.appendChild(barLabel); barWrap.appendChild(bar);
+  hero.appendChild(barWrap);
+
+  var dots = el("div",{class:"map-dots","aria-hidden":"true"});
+  WORDS.forEach(function(w){
+    var rec = state.words[w.id];
+    var lit = rec && isMastered(rec);
+    dots.appendChild(el("span",{class:"map-dot"+(lit?" lit":"")}));
+  });
+  hero.appendChild(dots);
+
+  var cta = el("button",{class:"btn block glow",style:"margin-top:18px;",onclick:function(){
+    var ids = WORDS.map(function(w){return w.id;});
+    newSession("quest", ids);
+    location.hash = "#/quest";
+  }},[started ? "Continue Topic Quest" : "Start Topic Quest"]);
+  hero.appendChild(cta);
+  wrap.appendChild(hero);
+
+  var reviewCard = el("div",{class:"card"});
+  reviewCard.appendChild(el("h3",{style:"font-size:1.05rem;margin-bottom:6px;"},["Daily Review"]));
+  reviewCard.appendChild(el("p",{class:"muted",style:"font-size:.88rem;margin-bottom:12px;"},[
+    due > 0 ? (due + " word" + (due===1?"":"s") + " due for review today.") : "Nothing due yet — come back after your first quest."
+  ]));
+  reviewCard.appendChild(el("button",{class:"btn secondary block",disabled: due===0 ? "true": null, onclick:function(){
+    location.hash = "#/daily";
+  }},["Review now"]));
+  wrap.appendChild(reviewCard);
+
+  main.appendChild(wrap);
+}
+
+/* ============================= DAILY REVIEW ============================= */
+function renderDailyIntro(main){
+  var due = dueWordIds();
+  var wrap = el("div",{class:"screen card"});
+  wrap.appendChild(el("p",{class:"eyebrow"},["Daily Review"]));
+  wrap.appendChild(el("h2",{class:"section-title"},[due.length + " word" + (due.length===1?"":"s") + " ready"]));
+  wrap.appendChild(el("p",{class:"muted",style:"margin:8px 0 18px;"},[
+    "Interleaved review pulled from everything you've started. Wrong answers come back sooner."
+  ]));
+  if(due.length === 0){
+    wrap.appendChild(el("div",{class:"empty-state"},["Nothing is due right now. Play a Topic Quest to add words to your review queue."]));
+  } else {
+    wrap.appendChild(el("button",{class:"btn block glow",onclick:function(){
+      newSession("daily", shuffle(due));
+      location.hash = "#/daily-play";
+    }},["Start review"]));
+  }
+  main.appendChild(wrap);
+}
+
+/* ============================= SESSION RENDERER (Quest + Daily share this) ============================= */
+function renderSession(main){
+  var s = state.session;
+  if(s.phase === "discovery"){ renderDiscoveryPhase(main); return; }
+  if(s.phase === "challenge"){ renderChallengePhase(main); return; }
+  if(s.phase === "boss"){ renderBossPhase(main); return; }
+  if(s.phase === "results"){ renderResultsPhase(main); return; }
+}
+
+function sessionProgressHeader(label){
+  var s = state.session;
+  var wrap = el("div",{style:"margin-bottom:16px;"});
+  var row = el("div",{style:"display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:6px;"},[
+    el("span",{class:"muted"},[label]),
+    el("span",{class:"muted"},["Batch "+(s.batchIndex+1)+"/"+totalBatches()])
+  ]);
+  wrap.appendChild(row);
+  var pct = Math.round(((s.batchIndex)/totalBatches())*100);
+  wrap.appendChild(el("div",{class:"progressbar"},[el("span",{style:"width:"+pct+"%"})]));
+  return wrap;
+}
+
+function renderDiscoveryPhase(main){
+  var s = state.session;
+  var batch = currentBatch();
+  var idx = s.currentDiscoveryIdx;
+  var wrap = el("div",{class:"screen"});
+  wrap.appendChild(sessionProgressHeader("Discovery"));
+
+  if(idx >= batch.length){
+    s.challengePlan = buildChallengePlan(batch);
+    s.challengeIndex = 0;
+    s.phase = "challenge";
+    saveState();
+    return;
+  }
+  var w = byId(batch[idx]);
+  var card = el("div",{class:"card glow"});
+  card.appendChild(el("span",{class:"badge"},[w.level + " · " + w.pos]));
+  card.appendChild(el("h2",{class:"wordcard-title"},[w.word]));
+  card.appendChild(el("p",{class:"pron"},[w.pronunciation]));
+  card.appendChild(el("p",{style:"margin-top:12px;font-size:1.05rem;"},[w.simpleDefinition]));
+  card.appendChild(el("p",{class:"muted",style:"margin-top:10px;font-style:italic;"},["\u201c"+w.example+"\u201d"]));
+  if(w.synonyms.length){
+    card.appendChild(el("p",{class:"muted",style:"margin-top:12px;font-size:.85rem;"},["Similar: "+w.synonyms.join(", ")]));
+  }
+  wrap.appendChild(card);
+  wrap.appendChild(el("button",{class:"btn block",style:"margin-top:16px;",onclick:function(){
+    scoreAnswer(w.id, "discovery", true);
+    s.currentDiscoveryIdx += 1;
+    saveState();
+  }},["Got it →"]));
+  main.appendChild(wrap);
+}
+
+function renderChallengePhase(main){
+  var s = state.session;
+  var batch = currentBatch();
+
+  if(s.challengeIndex >= s.challengePlan.length){
+    s.batchIndex += 1;
+    if(s.batchIndex < totalBatches() && s.mode === "quest"){
+      s.phase = "discovery";
+      s.currentDiscoveryIdx = 0;
+    } else if(s.mode === "quest") {
+      s.phase = "boss";
+    } else {
+      s.phase = "results";
+    }
+    saveState();
+    return;
+  }
+
+  var item = s.challengePlan[s.challengeIndex];
+  var w = byId(item.wordId);
+  var wrap = el("div",{class:"screen"});
+  wrap.appendChild(sessionProgressHeader("Challenge " + (s.challengeIndex+1) + "/" + s.challengePlan.length));
+
+  var card = el("div",{class:"card"});
+  var advance = function(isCorrect){
+    scoreAnswer(w.id, item.mechanic, isCorrect);
+    s.totalCount += 1;
+    if(isCorrect){ s.correctCount += 1; }
+    var xp = {recognitionQuiz:5,sentenceRepair:8,collocationDuel:6}[item.mechanic] || 5;
+    s.xpEarned += isCorrect ? xp : Math.round(xp*0.2);
+    addXP(isCorrect ? xp : Math.round(xp*0.2));
+    s.challengeIndex += 1;
+    saveState();
+  };
+
+  if(item.mechanic === "recognitionQuiz") renderRecognitionQuiz(card, w, advance);
+  else if(item.mechanic === "sentenceRepair") renderSentenceRepair(card, w, advance);
+  else renderCollocationDuel(card, w, advance);
+
+  wrap.appendChild(card);
+  main.appendChild(wrap);
+}
+
+function renderRecognitionQuiz(card, w, advance){
+  card.appendChild(el("span",{class:"badge"},["Recognition Quiz"]));
+  card.appendChild(el("h3",{style:"margin-top:10px;font-size:1.15rem;font-weight:600;"},["Which word means:"]));
+  card.appendChild(el("p",{style:"margin-top:6px;font-size:1.1rem;font-family:var(--font-display);"},["\u201c"+w.simpleDefinition+"\u201d"]));
+
+  var distractorPool = WORDS.filter(function(x){ return x.id !== w.id; });
+  var options = shuffle(pick(distractorPool,3).concat([w]));
+  var grid = el("div",{class:"choice-grid"});
+  var feedback = el("div",{class:"feedback"});
+  var answered = false;
+
+  options.forEach(function(opt){
+    var btn = el("button",{class:"choice",onclick:function(){
+      if(answered) return; answered = true;
+      var ok = opt.id === w.id;
+      btn.classList.add(ok ? "correct" : "incorrect");
+      if(!ok){
+        Array.prototype.forEach.call(grid.children, function(c,i){
+          if(options[i].id === w.id) c.classList.add("correct");
+        });
+      }
+      Array.prototype.forEach.call(grid.children, function(c){ c.disabled = true; });
+      feedback.textContent = ok ? "Correct! \u201c"+w.word+"\u201d it is." : "Not quite — the answer was \u201c"+w.word+"\u201d.";
+      feedback.className = "feedback show " + (ok ? "good":"bad");
+      setTimeout(function(){ advance(ok); }, 900);
+    }},[opt.word]);
+    grid.appendChild(btn);
+  });
+  card.appendChild(grid);
+  card.appendChild(feedback);
+}
+
+function tokenizeExample(w){
+  var raw = w.example;
+  var phrase = w.word.replace(/[.]/g,"");
+  var tokens = raw.split(/\s+/);
+  var phraseWords = phrase.toLowerCase().split(/\s+/);
+  var idx = -1;
+  for(var i=0;i<=tokens.length-phraseWords.length;i++){
+    var match = true;
+    for(var j=0;j<phraseWords.length;j++){
+      var t = tokens[i+j].toLowerCase().replace(/[^a-z']/g,"");
+      if(t !== phraseWords[j]){ match = false; break; }
+    }
+    if(match){ idx = i; break; }
+  }
+  return {tokens:tokens, startIdx:idx, span:phraseWords.length};
+}
+
+function renderSentenceRepair(card, w, advance){
+  card.appendChild(el("span",{class:"badge"},["Sentence Repair"]));
+  card.appendChild(el("h3",{style:"margin-top:10px;font-size:1.05rem;font-weight:600;"},["Tap the word that doesn't belong:"]));
+
+  var info = tokenizeExample(w);
+  var otherWords = WORDS.filter(function(x){return x.id!==w.id;});
+  var replacement = pick(otherWords,1)[0].word;
+  var displayTokens = info.tokens.slice();
+  var wrongPos;
+
+  if(info.startIdx >= 0){
+    wrongPos = info.startIdx;
+    var trailingPunct = (displayTokens[info.startIdx+info.span-1].match(/[.,!?]+$/)||[""])[0];
+    displayTokens.splice(info.startIdx, info.span, replacement);
+    displayTokens[info.startIdx] = capitalizeIfNeeded(info.tokens[info.startIdx], displayTokens[info.startIdx]) + trailingPunct;
+  } else {
+    wrongPos = Math.floor(Math.random()*displayTokens.length);
+    displayTokens[wrongPos] = replacement;
+  }
+
+  var box = el("div",{class:"sentence-box"});
+  var feedback = el("div",{class:"feedback"});
+  var answered = false;
+  var tokenEls = [];
+
+  displayTokens.forEach(function(tok, i){
+    var t = el("span",{class:"token",tabindex:"0",onclick:function(){
+      if(answered) return; answered = true;
+      var ok = i === wrongPos;
+      tokenEls[i].classList.add(ok ? "correct" : "incorrect");
+      if(!ok && wrongPos>=0) tokenEls[wrongPos].classList.add("correct");
+      feedback.textContent = ok
+        ? "Right! It should be \u201c"+w.word+".\u201d " + w.commonMistake
+        : "The fix was \u201c"+w.word+".\u201d " + w.commonMistake;
+      feedback.className = "feedback show " + (ok ? "good":"bad");
+      setTimeout(function(){ advance(ok); }, 1400);
+    }},[tok]);
+    tokenEls.push(t);
+    box.appendChild(t);
+  });
+  card.appendChild(box);
+  card.appendChild(feedback);
+}
+function capitalizeIfNeeded(original, replacement){
+  if(/^[A-Z]/.test(original)) return replacement.charAt(0).toUpperCase()+replacement.slice(1);
+  return replacement;
+}
+
+function renderCollocationDuel(card, w, advance){
+  card.appendChild(el("span",{class:"badge"},["Collocation Duel"]));
+  card.appendChild(el("h3",{style:"margin-top:10px;font-size:1.05rem;font-weight:600;"},["Which sounds natural?"]));
+  var duel = COLLOCATION_DUELS[w.id] || {correct:w.collocations[0]||w.word, wrong:w.word+" a lot too"};
+  var opts = shuffle([{text:duel.correct,ok:true},{text:duel.wrong,ok:false}]);
+
+  var timerWrap = el("div",{class:"timerbar"},[el("span",{style:"width:100%"})]);
+  card.appendChild(timerWrap);
+  var timeLeft = 4000, started = Date.now(), answered = false;
+  var timerBarInner = timerWrap.firstChild;
+  var interval = setInterval(function(){
+    var elapsed = Date.now()-started;
+    var pctLeft = Math.max(0, 100 - (elapsed/timeLeft)*100);
+    timerBarInner.style.width = pctLeft+"%";
+    if(elapsed >= timeLeft && !answered){
+      answered = true; clearInterval(interval);
+      finish(false, null);
+    }
+  }, 80);
+
+  var grid = el("div",{class:"choice-grid"});
+  var feedback = el("div",{class:"feedback"});
+
+  function finish(ok, btn){
+    clearInterval(interval);
+    Array.prototype.forEach.call(grid.children, function(c){ c.disabled = true; });
+    if(btn) btn.classList.add(ok?"correct":"incorrect");
+    if(!ok){
+      Array.prototype.forEach.call(grid.children,function(c,i){ if(opts[i].ok) c.classList.add("correct"); });
+    }
+    feedback.textContent = ok ? "Natural! \u201c"+duel.correct+"\u201d is correct." : "The natural phrase is \u201c"+duel.correct+"\u201d.";
+    feedback.className = "feedback show "+(ok?"good":"bad");
+    setTimeout(function(){ advance(ok); }, 1000);
+  }
+
+  opts.forEach(function(opt){
+    var btn = el("button",{class:"choice",onclick:function(){
+      if(answered) return; answered = true;
+      finish(opt.ok, btn);
+    }},[opt.text]);
+    grid.appendChild(btn);
+  });
+  card.appendChild(grid);
+  card.appendChild(feedback);
+}
+
+/* ============================= BOSS ============================= */
+function renderBossPhase(main){
+  var s = state.session;
+  if(typeof s.bossIndex !== "number"){ s.bossIndex = 0; s.bossCorrect = 0; }
+  var wrap = el("div",{class:"screen"});
+  wrap.appendChild(el("p",{class:"eyebrow"},["Topic Boss · The Rewriter"]));
+  wrap.appendChild(el("h2",{class:"section-title"},["Boss "+(s.bossIndex+1)+"/"+BOSS_ITEMS.length]));
+  wrap.appendChild(el("p",{class:"muted",style:"margin:6px 0 16px;"},["Upgrade the clumsy sentence to sound natural."]));
+
+  if(s.bossIndex >= BOSS_ITEMS.length){
+    s.phase = "results";
+    saveState();
+    return;
+  }
+
+  var item = BOSS_ITEMS[s.bossIndex];
+  var card = el("div",{class:"card glow"});
+  card.appendChild(el("span",{class:"badge"},["Clumsy"]));
+  card.appendChild(el("p",{style:"margin-top:8px;font-size:1.1rem;font-family:var(--font-display);"},["\u201c"+item.clumsy+"\u201d"]));
+  var grid = el("div",{class:"choice-grid",style:"margin-top:16px;"});
+  var feedback = el("div",{class:"feedback"});
+  var answered = false;
+  var optOrder = shuffle(item.options.map(function(o,i){return {text:o,ok:i===item.correctIndex};}));
+
+  optOrder.forEach(function(opt){
+    var btn = el("button",{class:"choice",onclick:function(){
+      if(answered) return; answered = true;
+      Array.prototype.forEach.call(grid.children, function(c){c.disabled=true;});
+      btn.classList.add(opt.ok?"correct":"incorrect");
+      if(!opt.ok){
+        Array.prototype.forEach.call(grid.children,function(c,i){ if(optOrder[i].ok) c.classList.add("correct"); });
+      }
+      feedback.textContent = opt.ok ? "Powered up! That's the natural, fluent version." : "Close — the strongest rewrite was the other option.";
+      feedback.className = "feedback show "+(opt.ok?"good":"bad");
+      addXP(opt.ok?15:3);
+      if(opt.ok) s.bossCorrect += 1;
+      setTimeout(function(){ s.bossIndex += 1; saveState(); }, 1200);
+    }},[opt.text]);
+    grid.appendChild(btn);
+  });
+  card.appendChild(grid);
+  card.appendChild(feedback);
+  wrap.appendChild(card);
+  main.appendChild(wrap);
+}
+
+/* ============================= RESULTS ============================= */
+function renderResultsPhase(main){
+  var s = state.session;
+  var wrap = el("div",{class:"screen"});
+  var hero = el("div",{class:"card glow result-hero"});
+  hero.appendChild(el("p",{class:"eyebrow"},[s.mode === "quest" ? "Quest Complete" : "Review Complete"]));
+  hero.appendChild(el("div",{class:"result-num"},["+"+s.xpEarned+" XP"]));
+  var accuracy = s.totalCount ? Math.round((s.correctCount/s.totalCount)*100) : 0;
+  hero.appendChild(el("p",{class:"muted",style:"margin-top:8px;"},[
+    s.correctCount+"/"+s.totalCount+" correct ("+accuracy+"%)" + (typeof s.bossCorrect==="number" ? " · Boss "+s.bossCorrect+"/"+BOSS_ITEMS.length : "")
+  ]));
+  wrap.appendChild(hero);
+
+  var masteryCard = el("div",{class:"card"});
+  masteryCard.appendChild(el("h3",{style:"font-size:1rem;margin-bottom:10px;"},["Topic mastery"]));
+  var pct = topicMasteryPct();
+  masteryCard.appendChild(el("div",{class:"progressbar"},[el("span",{style:"width:"+pct+"%"})]));
+  masteryCard.appendChild(el("p",{class:"muted",style:"margin-top:8px;font-size:.85rem;"},[pct+"% of Greetings mastered"]));
+  wrap.appendChild(masteryCard);
+
+  wrap.appendChild(el("button",{class:"btn block",style:"margin-top:16px;",onclick:function(){
+    state.session = null; saveState(); location.hash = "#/home";
+  }},["Back to Home"]));
+
+  main.appendChild(wrap);
+}
+
+/* ============================= COLLECTION (DEX) ============================= */
+function renderCollection(main){
+  var wrap = el("div",{class:"screen"});
+  wrap.appendChild(el("p",{class:"eyebrow"},["Vocabulary Collection"]));
+  wrap.appendChild(el("h2",{class:"section-title",style:"margin-bottom:14px;"},["Greetings — "+Object.keys(state.words).length+"/"+WORDS.length+" discovered"]));
+  var grid = el("div",{class:"dex-grid"});
+  WORDS.forEach(function(w){
+    var rec = state.words[w.id];
+    var discovered = !!rec;
+    var pct = rec ? Math.round(wordMastery(rec)*100) : 0;
+    var item = el("button",{class:"dex-item",onclick:function(){
+      if(discovered) location.hash = "#/worddetail/"+w.id;
+    }},[
+      el("div",{},[
+        el("div",{style:"font-weight:700;"},[discovered ? w.word : "?????"]),
+        el("div",{class:"muted",style:"font-size:.78rem;"},[discovered ? w.pos : "Not yet discovered"])
+      ]),
+      el("div",{class:"dex-mastery"},[
+        el("div",{class:"progressbar"},[el("span",{style:"width:"+pct+"%"})])
+      ])
+    ]);
+    grid.appendChild(item);
+  });
+  wrap.appendChild(grid);
+  main.appendChild(wrap);
+}
+
+function renderWordDetail(main, wordId){
+  var w = byId(wordId);
+  if(!w){ renderCollection(main); return; }
+  var rec = state.words[w.id];
+  var wrap = el("div",{class:"screen"});
+  wrap.appendChild(el("button",{class:"btn secondary",style:"margin-bottom:14px;",onclick:function(){ location.hash="#/collection"; }},["← Back"]));
+  var card = el("div",{class:"card"});
+  card.appendChild(el("span",{class:"badge"},[w.level+" · "+w.pos+" · "+w.register]));
+  card.appendChild(el("h2",{class:"wordcard-title"},[w.word]));
+  card.appendChild(el("p",{class:"pron"},[w.pronunciation]));
+  card.appendChild(el("p",{style:"margin-top:12px;"},[w.simpleDefinition]));
+  card.appendChild(el("p",{class:"muted",style:"margin-top:10px;font-style:italic;"},["\u201c"+w.example+"\u201d"]));
+  if(w.collocations.length) card.appendChild(el("p",{style:"margin-top:12px;font-size:.88rem;"},[el("strong",{},["Collocations: "]), w.collocations.join(", ")]));
+  if(w.synonyms.length) card.appendChild(el("p",{style:"margin-top:6px;font-size:.88rem;"},[el("strong",{},["Synonyms: "]), w.synonyms.join(", ")]));
+  if(w.antonyms.length) card.appendChild(el("p",{style:"margin-top:6px;font-size:.88rem;"},[el("strong",{},["Antonyms: "]), w.antonyms.join(", ")]));
+  card.appendChild(el("p",{style:"margin-top:10px;font-size:.85rem;color:var(--danger);"},["⚠ "+w.commonMistake]));
+  if(rec){
+    var pct = Math.round(wordMastery(rec)*100);
+    card.appendChild(el("div",{style:"margin-top:16px;"},[
+      el("div",{style:"display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:6px;"},[el("span",{class:"muted"},["Mastery"]),el("strong",{},[pct+"%"])]),
+      el("div",{class:"progressbar"},[el("span",{style:"width:"+pct+"%"})])
+    ]));
+  }
+  wrap.appendChild(card);
+  main.appendChild(wrap);
+}
+
+/* ============================= SETTINGS ============================= */
+function renderSettings(main){
+  var wrap = el("div",{class:"screen"});
+  wrap.appendChild(el("p",{class:"eyebrow"},["Settings"]));
+  wrap.appendChild(el("h2",{class:"section-title",style:"margin-bottom:14px;"},["Preferences"]));
+
+  var card = el("div",{class:"card"});
+  var themeRow = el("div",{class:"settings-row"},[
+    el("div",{},[el("div",{style:"font-weight:600;"},["Dark mode"]), el("div",{class:"muted",style:"font-size:.8rem;"},["Modern Atlas dark theme"])]),
+  ]);
+  var toggle = el("div",{class:"toggle"+(state.theme==="dark"?" on":""),role:"switch","aria-checked":state.theme==="dark","tabindex":"0",onclick:function(){
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    saveState();
+  }});
+  toggle.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle.click(); }});
+  themeRow.appendChild(toggle);
+  card.appendChild(themeRow);
+
+  var resetRow = el("div",{class:"settings-row"},[
+    el("div",{},[el("div",{style:"font-weight:600;"},["Reset progress"]), el("div",{class:"muted",style:"font-size:.8rem;"},["Clears streak, XP, and word mastery"])]),
+    el("button",{class:"btn danger",onclick:function(){
+      if(confirm("This will erase all LexQuest progress on this device. Continue?")){
+        state = defaultState();
+        saveState();
+        location.hash = "#/home";
+      }
+    }},["Reset"])
+  ]);
+  card.appendChild(resetRow);
+  wrap.appendChild(card);
+  main.appendChild(wrap);
+}
+
+/* ============================= INIT ============================= */
+if(!location.hash) location.hash = "#/home";
+render();
+
+})();
+</script>
+</body>
+</html>
+
