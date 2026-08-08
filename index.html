@@ -2,452 +2,245 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sudoku Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web Arcade</title>
     <style>
-        /* Default Light Theme */
+        /* Modern Dark Theme & Variables */
         :root {
-            --bg: #f3f4f6;
-            --surface: #ffffff;
-            --text: #1f2937;
-            --text-muted: #6b7280;
-            --border: #d1d5db;
-            --border-thick: #374151;
-            --primary: #3b82f6;
-            --selected: #bfdbfe;
-            --highlight: #e5e7eb;
-            --error: #fca5a5;
-            --text-fixed: #111827;
-            --text-user: #2563eb;
-            --text-error: #dc2626;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.4);
+            --border: #334155;
+            --ready: #10b981;
+            --soon: #f59e0b;
         }
 
-        /* Dark Theme Variables applied via data attribute */
-        [data-theme="dark"] {
-            --bg: #111827;
-            --surface: #1f2937;
-            --text: #f9fafb;
-            --text-muted: #9ca3af;
-            --border: #4b5563;
-            --border-thick: #9ca3af;
-            --primary: #3b82f6;
-            --selected: #1e3a8a;
-            --highlight: #374151;
-            --error: #7f1d1d;
-            --text-fixed: #f9fafb;
-            --text-user: #60a5fa;
-            --text-error: #ef4444;
-        }
-        
-        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
-        
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            padding: 20px; 
-            transition: background 0.3s, color 0.3s;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
-        .app-container { 
-            width: 100%; 
-            max-width: 500px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 25px; 
-        }
-
-        .board-container { display: flex; flex-direction: column; gap: 15px; }
-        .side-panel { display: flex; flex-direction: column; gap: 20px; }
-
-        @media (min-width: 800px) {
-            .app-container { 
-                flex-direction: row; 
-                max-width: 950px; 
-                align-items: center; 
-                gap: 40px; 
-            }
-            .board-container { flex: 1.5; }
-            .side-panel { flex: 1; justify-content: center; }
-        }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; }
-        .header-controls { display: flex; gap: 10px; }
-        .stats { display: flex; gap: 15px; font-weight: 600; color: var(--text-muted); }
-        
-        select { 
-            background: var(--surface); 
-            color: var(--text); 
-            border: 1px solid var(--border); 
-            padding: 10px; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            font-size: 1rem;
-            cursor: pointer; 
-        }
-
-        /* Theme Toggle Button Specifics */
-        .theme-btn {
-            background: var(--surface);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 1.2rem;
-            cursor: pointer;
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Header Styling */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        /* Responsive Grid for Games */
+        .arcade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* Game Card Styling */
+        .game-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px 25px;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            box-shadow: 0 15px 30px -10px var(--accent-glow);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 5px;
+            transition: transform 0.3s;
+        }
+
+        .game-card:hover .game-icon {
+            transform: scale(1.1);
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .game-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            flex-grow: 1; /* Pushes the button to the bottom */
+        }
+
+        /* Status Badge (Ready vs Coming Soon) */
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ready {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--ready);
+        }
+
+        .status-soon {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--soon);
+        }
+
+        /* Play Button */
+        .play-btn {
+            background-color: var(--border);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 10px;
             transition: background 0.2s;
         }
-        
-        .board { 
-            display: grid; 
-            grid-template-columns: repeat(9, 1fr); 
-            gap: 1px; 
-            background: var(--border-thick); 
-            border: 3px solid var(--border-thick); 
-            aspect-ratio: 1; 
-            border-radius: 4px; 
-            overflow: hidden; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+
+        .game-card.ready:hover .play-btn {
+            background-color: var(--accent);
+            color: white;
         }
-        
-        .cell { 
-            background: var(--surface); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: clamp(1.2rem, 4vw, 1.8rem); 
-            font-weight: 500; 
-            cursor: pointer; 
-            color: var(--text-fixed); 
-            position: relative; 
-            transition: background 0.1s; 
+
+        /* Make unready games look disabled */
+        .game-card.soon {
+            opacity: 0.7;
+            pointer-events: none; /* Prevents clicking */
         }
-        
-        .cell:nth-child(3n) { border-right: 2px solid var(--border-thick); }
-        .cell:nth-child(9n) { border-right: none; }
-        .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid var(--border-thick); }
-        
-        .cell.selected { background: var(--selected); }
-        .cell.highlight { background: var(--highlight); }
-        .cell.error { background: var(--error); color: var(--text-error); }
-        .cell.user-input { color: var(--text-user); }
-        
-        .notes { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); position: absolute; inset: 2px; }
-        .note { font-size: 0.6rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; line-height: 1; }
-        
-        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        
-        .game-btn { 
-            background: var(--surface); 
-            color: var(--text); 
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
-            padding: 15px 0; 
-            font-size: 1.5rem; 
-            font-weight: 600;
-            cursor: pointer; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            transition: transform 0.1s, background 0.2s;
-        }
-        
-        .game-btn:active { transform: scale(0.95); }
-        .btn-text { font-size: 0.75rem; margin-top: 5px; font-weight: 600; text-transform: uppercase; }
-        
-        .toggle-on { background: var(--primary); color: white; border-color: var(--primary); }
-        .new-game-btn { 
-            grid-column: 1 / -1; 
-            font-size: 1.2rem; 
-            padding: 15px; 
-            background: var(--primary); 
-            color: white; 
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
-            transition: transform 0.1s;
-        }
-        .new-game-btn:active { transform: scale(0.95); }
+
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    
-    <div class="board-container">
-        <div class="header">
-            <div class="header-controls">
-                <select id="difficulty" onchange="newGame()">
-                    <option value="30">Easy</option>
-                    <option value="40" selected>Medium</option>
-                    <option value="50">Hard</option>
-                </select>
-                <!-- Theme Toggle Button Added Here -->
-                <button class="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
-            </div>
-            <div class="stats">
-                <span id="mistakes">Mistakes: 0/3</span>
-                <span id="timer">00:00</span>
-            </div>
-        </div>
-        <div class="board" id="board"></div>
-    </div>
+    <header>
+        <h1>My Web Arcade</h1>
+        <p>Select a game to start playing</p>
+    </header>
 
-    <div class="side-panel">
-        <div class="controls">
-            <button class="game-btn" onclick="undo()"><span class="btn-text">Undo</span></button>
-            <button class="game-btn" onclick="erase()"><span class="btn-text">Erase</span></button>
-            <button class="game-btn" id="notesBtn" onclick="toggleNotes()"><span class="btn-text">Notes</span></button>
-            <button class="game-btn" onclick="hint()"><span class="btn-text">Hint</span></button>
-        </div>
+    <!-- The games will be automatically injected into this grid by the JavaScript below -->
+    <div class="arcade-grid" id="gameGrid"></div>
 
-        <div class="numpad" id="numpad"></div>
-        <button class="new-game-btn" onclick="newGame()">New Game</button>
-    </div>
+    <script>
+        // =====================================================================
+        // 🎮 HOW TO ADD A NEW GAME:
+        // Just copy one of the lines below, change the details, and add it to the list!
+        // status can be "ready" (clickable) or "soon" (unclickable).
+        // =====================================================================
 
-</div>
-
-<script>
-    // --- Theme Management ---
-    function initializeTheme() {
-        const savedTheme = localStorage.getItem('sudoku-theme');
-        if (savedTheme) {
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('sudoku-theme', newTheme);
-    }
-
-    // Run theme initialization immediately
-    initializeTheme();
-
-    // --- Game Logic ---
-    let solution = [], puzzle = [], grid = [], notesData = [], history = [];
-    let selectedIdx = -1, mistakes = 0, timerInterval, timeSeconds = 0;
-    let notesMode = false;
-
-    const boardEl = document.getElementById('board');
-    const numpadEl = document.getElementById('numpad');
-    
-    for (let i = 0; i < 81; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.onclick = () => selectCell(i);
-        boardEl.appendChild(cell);
-    }
-    
-    for (let i = 1; i <= 9; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'game-btn';
-        btn.innerText = i;
-        btn.onclick = () => inputNumber(i);
-        numpadEl.appendChild(btn);
-    }
-
-    function newGame() {
-        clearInterval(timerInterval);
-        timeSeconds = 0;
-        mistakes = 0;
-        history = [];
-        notesData = Array.from({length: 81}, () => new Set());
-        updateStats();
-        generateSudoku(parseInt(document.getElementById('difficulty').value));
-        timerInterval = setInterval(() => { timeSeconds++; updateStats(); }, 1000);
-    }
-
-    function generateSudoku(holes) {
-        let base = Array(81).fill(0);
-        solve(base); 
-        solution = [...base];
-        
-        let p = [...base];
-        let cellsToHide = new Set();
-        while(cellsToHide.size < holes) {
-            cellsToHide.add(Math.floor(Math.random() * 81));
-        }
-        cellsToHide.forEach(idx => p[idx] = 0);
-        
-        puzzle = [...p];
-        grid = [...p];
-        renderBoard();
-        selectCell(0);
-    }
-
-    function solve(board) {
-        for (let i = 0; i < 81; i++) {
-            if (board[i] === 0) {
-                let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
-                for (let n of nums) {
-                    if (isValid(board, i, n)) {
-                        board[i] = n;
-                        if (solve(board)) return true;
-                        board[i] = 0;
-                    }
-                }
-                return false;
+        const games = [
+            { 
+                title: "Sudoku Pro", 
+                icon: "🔢", 
+                desc: "Classic number puzzle with multiple difficulties and notes.", 
+                file: "sudoku.html", 
+                status: "ready" 
+            },
+            { 
+                title: "Math Genius", 
+                icon: "➕", 
+                desc: "Test your brain with quick-fire math challenges.", 
+                file: "math.html", 
+                status: "ready" 
+            },
+            { 
+                title: "Retro Snake", 
+                icon: "🐍", 
+                desc: "Eat the apples and grow bigger without hitting the walls.", 
+                file: "snake.html", 
+                status: "soon" 
+            },
+            { 
+                title: "Word Connect", 
+                icon: "🔤", 
+                desc: "Swipe letters to build words and clear the board.", 
+                file: "word.html", 
+                status: "soon" 
+            },
+            { 
+                title: "Memory Match", 
+                icon: "🃏", 
+                desc: "Flip the cards and find the matching pairs before time runs out.", 
+                file: "memory.html", 
+                status: "soon" 
             }
-        }
-        return true;
-    }
+        ];
 
-    function isValid(board, idx, num) {
-        let r = Math.floor(idx / 9), c = idx % 9;
-        for (let i = 0; i < 9; i++) {
-            if (board[r * 9 + i] === num) return false;
-            if (board[i * 9 + c] === num) return false;
-            let br = Math.floor(r / 3) * 3 + Math.floor(i / 3);
-            let bc = Math.floor(c / 3) * 3 + i % 3;
-            if (board[br * 9 + bc] === num) return false;
-        }
-        return true;
-    }
+        // =====================================================================
+        // DO NOT EDIT BELOW THIS LINE - This code builds the UI automatically
+        // =====================================================================
 
-    function selectCell(idx) {
-        selectedIdx = idx;
-        renderBoard();
-    }
+        const grid = document.getElementById('gameGrid');
 
-    function inputNumber(num) {
-        if (selectedIdx === -1 || puzzle[selectedIdx] !== 0 || grid[selectedIdx] === solution[selectedIdx]) return;
-        
-        saveState();
-        if (notesMode) {
-            grid[selectedIdx] = 0;
-            if (notesData[selectedIdx].has(num)) notesData[selectedIdx].delete(num);
-            else notesData[selectedIdx].add(num);
-        } else {
-            notesData[selectedIdx].clear();
-            grid[selectedIdx] = num;
-            if (num !== solution[selectedIdx]) {
-                mistakes++;
-                if (mistakes >= 3) {
-                    alert("Game Over! 3 Mistakes reached.");
-                    newGame();
-                    return;
-                }
-            }
-        }
-        renderBoard();
-        checkWin();
-    }
+        games.forEach(game => {
+            // Determine button text and badge based on status
+            const isReady = game.status === "ready";
+            const badgeClass = isReady ? "status-ready" : "status-soon";
+            const badgeText = isReady ? "Ready to Play" : "Coming Soon";
+            const btnText = isReady ? "Play Now ➔" : "In Development";
 
-    function erase() {
-        if (selectedIdx === -1 || puzzle[selectedIdx] !== 0) return;
-        saveState();
-        grid[selectedIdx] = 0;
-        notesData[selectedIdx].clear();
-        renderBoard();
-    }
-
-    function hint() {
-        if (selectedIdx === -1 || puzzle[selectedIdx] !== 0) return;
-        saveState();
-        grid[selectedIdx] = solution[selectedIdx];
-        notesData[selectedIdx].clear();
-        renderBoard();
-        checkWin();
-    }
-
-    function toggleNotes() {
-        notesMode = !notesMode;
-        document.getElementById('notesBtn').classList.toggle('toggle-on', notesMode);
-    }
-
-    function saveState() {
-        history.push({
-            grid: [...grid],
-            notes: notesData.map(set => new Set(set))
-        });
-    }
-
-    function undo() {
-        if (history.length === 0) return;
-        let last = history.pop();
-        grid = last.grid;
-        notesData = last.notes;
-        renderBoard();
-    }
-
-    function renderBoard() {
-        const cells = boardEl.children;
-        let selectedVal = selectedIdx >= 0 ? grid[selectedIdx] : 0;
-
-        for (let i = 0; i < 81; i++) {
-            let el = cells[i];
-            el.className = 'cell';
-            el.innerHTML = '';
+            // Create the card link
+            const card = document.createElement('a');
+            card.href = isReady ? game.file : "#";
+            card.className = `game-card ${game.status}`;
             
-            if (selectedIdx !== -1) {
-                let r1 = Math.floor(i / 9), c1 = i % 9;
-                let r2 = Math.floor(selectedIdx / 9), c2 = selectedIdx % 9;
-                if (r1 === r2 || c1 === c2 || (Math.floor(r1/3)===Math.floor(r2/3) && Math.floor(c1/3)===Math.floor(c2/3))) {
-                    el.classList.add('highlight');
-                }
-            }
-            if (i === selectedIdx) el.classList.add('selected');
+            // Inject the HTML for the card
+            card.innerHTML = `
+                <div class="status-badge ${badgeClass}">${badgeText}</div>
+                <div class="game-icon">${game.icon}</div>
+                <div class="game-title">${game.title}</div>
+                <div class="game-desc">${game.desc}</div>
+                <div class="play-btn">${btnText}</div>
+            `;
 
-            if (grid[i] !== 0) {
-                el.innerText = grid[i];
-                if (puzzle[i] === 0) el.classList.add('user-input');
-                if (grid[i] !== solution[i] && puzzle[i] === 0) el.classList.add('error');
-                if (selectedVal !== 0 && grid[i] === selectedVal) el.classList.add('selected');
-            } else if (notesData[i].size > 0) {
-                let notesHtml = '<div class="notes">';
-                for(let n=1; n<=9; n++) {
-                    notesHtml += `<div class="note">${notesData[i].has(n) ? n : ''}</div>`;
-                }
-                notesHtml += '</div>';
-                el.innerHTML = notesHtml;
-            }
-        }
-        updateStats();
-    }
-
-    function updateStats() {
-        document.getElementById('mistakes').innerText = `Mistakes: ${mistakes}/3`;
-        let m = String(Math.floor(timeSeconds / 60)).padStart(2, '0');
-        let s = String(timeSeconds % 60).padStart(2, '0');
-        document.getElementById('timer').innerText = `${m}:${s}`;
-    }
-
-    function checkWin() {
-        if (grid.every((val, i) => val === solution[i])) {
-            clearInterval(timerInterval);
-            setTimeout(() => alert(`You won in ${document.getElementById('timer').innerText}!`), 100);
-        }
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key >= '1' && e.key <= '9') inputNumber(parseInt(e.key));
-        if (e.key === 'Backspace' || e.key === 'Delete') erase();
-        if (e.key === 'n' || e.key === 'N') toggleNotes();
-        if (e.key === 'ArrowUp' && selectedIdx >= 9) selectCell(selectedIdx - 9);
-        if (e.key === 'ArrowDown' && selectedIdx < 72) selectCell(selectedIdx + 9);
-        if (e.key === 'ArrowLeft' && selectedIdx % 9 !== 0) selectCell(selectedIdx - 1);
-        if (e.key === 'ArrowRight' && selectedIdx % 9 !== 8) selectCell(selectedIdx + 1);
-    });
-
-    newGame();
-</script>
+            grid.appendChild(card);
+        });
+    </script>
 </body>
 </html>
 
