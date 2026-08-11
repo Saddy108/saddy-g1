@@ -37,6 +37,67 @@ h1,h2,h3{font-family:'Fraunces',serif; margin:0; letter-spacing:-0.01em;}
 button{font-family:inherit; cursor:pointer;}
 .app{max-width:900px; margin:0 auto; padding:14px 14px 90px;}
 
+/* ============ OVERLAYS ============ */
+.overlay{
+  position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+  background:rgba(10,14,12,0.46); backdrop-filter:blur(8px); padding:18px;
+}
+.overlay.show{display:flex;}
+.overlay-card{
+  width:min(540px,100%); background:var(--paper-panel); border:1px solid var(--line); border-radius:22px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.18); padding:18px; position:relative; overflow:hidden;
+}
+.overlay-card::before{
+  content:''; position:absolute; inset:-1px auto auto -1px; width:140px; height:140px; border-radius:50%;
+  background:radial-gradient(circle, rgba(44,110,142,.12), transparent 68%); pointer-events:none;
+}
+.overlay-eyebrow{font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); margin-bottom:8px;}
+.stage-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0;}
+.stage-card{
+  border:1px solid var(--line); border-radius:16px; padding:14px; background:var(--paper-panel); text-align:left;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.stage-card strong{display:block;font-size:17px;margin-bottom:4px;color:var(--ink);font-weight:700;}
+.stage-card small{color:var(--ink);font-weight:500;}
+.stage-card:hover{transform:translateY(-1px); border-color:var(--teal); box-shadow:0 12px 28px rgba(44,110,142,0.12);}
+.stage-card.active{border-color:var(--teal); background:var(--teal-dim);}
+.stage-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.stage-note{font-size:12.5px;color:var(--ink-dim);line-height:1.5;margin:0;}
+
+.definition-popup{
+  position:fixed; left:50%; bottom:20px; transform:translateX(-50%) translateY(18px); z-index:70;
+  width:min(540px,calc(100vw - 24px)); background:var(--paper-panel); color:var(--ink);
+  border-radius:12px; border:1px solid var(--line); box-shadow:var(--shadow-panel); padding:14px 16px; opacity:0; pointer-events:none;
+  transition:opacity .22s ease, transform .22s ease;
+}
+.definition-popup.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;}
+.definition-popup .title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;margin-bottom:6px;color:var(--ink);} 
+.definition-popup .copy{font-size:14px;line-height:1.45;color:var(--ink);margin-bottom:12px;font-weight:500;}
+.definition-popup .btn{color:var(--ink);}
+.definition-popup .btn-primary{color:var(--paper);}
+
+.celebration-layer{
+  position:fixed; inset:0; pointer-events:none; z-index:65; overflow:hidden;
+}
+.confetti{
+  position:absolute; top:-14px; left:var(--x); width:10px; height:16px; border-radius:4px; background:var(--c);
+  transform:translate3d(0,0,0) rotate(0deg); animation:confetti-fall var(--d) linear forwards;
+}
+@keyframes confetti-fall{
+  0%{opacity:1; transform:translate3d(0,-12px,0) rotate(0deg) scale(1);} 
+  100%{opacity:0; transform:translate3d(var(--dx), calc(100vh + 24px), 0) rotate(var(--r)) scale(.72);} 
+}
+.confetti::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:0 6px 18px rgba(0,0,0,.12);}
+.burst-ring{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:999px;transform:translate(-50%,-50%) scale(0);pointer-events:none;opacity:0.9}
+.burst-ring.show{animation:burst 520ms cubic-bezier(.2,.9,.2,1);}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(0);opacity:.9}50%{transform:translate(-50%,-50%) scale(1.8);opacity:.6}100%{transform:translate(-50%,-50%) scale(1.0);opacity:0}}
+
+/* ensure readable text on dark theme for specific small elements */
+.stage-card small, .stage-note, .word-tag, .j-item .d, .stat-chip small{color:var(--ink-dim);} 
+
+.round-burst{animation:round-burst .4s ease;}
+@keyframes round-burst{0%{transform:scale(1);} 50%{transform:scale(1.03);} 100%{transform:scale(1);}}
+
 /* ============ HEADER ============ */
 .topbar{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 14px;}
 .brand{display:flex; align-items:center; gap:10px;}
@@ -245,7 +306,7 @@ canvas#chart{width:100%;height:120px;display:block;}
   <div class="view" id="view-settings">
     <div class="panel">
       <div class="section-title">Gameplay</div>
-      <div class="field-row"><div><label>Show hints during search</label><span class="sub">Definitions visible before word is found</span></div><button class="switch" id="setHints"></button></div>
+      <div class="field-row"><div><label>Show hints during search</label><span class="sub" id="setHintsLabel">Fetching definitions from Dictionary API</span></div><button class="switch" id="setHints"></button></div>
       <div class="field-row"><div><label>Allowed directions</label><span class="sub">Higher = harder to spot</span></div>
         <select id="setDirections"><option value="2">Horiz + Vert</option><option value="4">+ Diagonal</option><option value="8">All 8 directions</option></select>
       </div>
@@ -259,6 +320,7 @@ canvas#chart{width:100%;height:120px;display:block;}
     </div>
     <div class="panel">
       <div class="section-title">Data</div>
+      <div class="field-row"><div><label>Auto-fetch definitions</label><span class="sub">Attempt to pre-load word definitions (may fail due to CORS)</span></div><button class="switch" id="setFetchDefs"></button></div>
       <div class="btn-row">
         <button class="btn" id="exportBtn">⬇ Export progress</button>
         <button class="btn" id="importBtn">⬆ Import progress</button>
@@ -272,12 +334,38 @@ canvas#chart{width:100%;height:120px;display:block;}
 
 </div>
 
+<div class="overlay" id="stageOverlay" aria-hidden="true">
+  <div class="overlay-card">
+    <div class="overlay-eyebrow">Choose stage</div>
+    <h2 style="font-size:24px;margin-bottom:8px;">Pick a word pool to load</h2>
+    <p class="stage-note">Your progress is saved locally, so the selected stage, mastery, streak, and round history will continue after reload.</p>
+    <div class="stage-grid" id="stageGrid"></div>
+    <div class="stage-actions">
+      <button class="btn btn-primary" id="resumeStageBtn">Continue saved stage</button>
+      <button class="btn" id="closeStageBtn">Start fresh stage</button>
+    </div>
+  </div>
+</div>
+
+<div class="definition-popup" id="definitionPopup" role="dialog" aria-live="polite" aria-modal="false" hidden>
+  <div class="title" id="definitionPopupTitle"></div>
+  <div class="copy" id="definitionPopupCopy"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="definitionViewBtn">View</button>
+    <button class="btn" id="definitionIgnoreBtn">Ignore</button>
+  </div>
+</div>
+
+<div class="celebration-layer" id="celebrationLayer" aria-hidden="true"></div>
+
 <div class="def-toast" id="defToast"></div>
 
 <script src="words.data.js"></script>
 <script>
 /* ================= WORD BANK ================= */
-// WORD_BANK is defined in words.data.js as {1:[[word,def],...], 2:[...], 3:[...], 4:[...], 5:[...]}
+// Supported data formats:
+// - New: WORD_LIST = [{word, level, definitionUrl}, ...]
+// - Legacy: WORD_BANK = {1:[[word,def],...], 2:[...], ...}
 const TIER_META = {
   1:{name:'A1 · Starter', color:'#4C8C4C'},
   2:{name:'A2 · Basic', color:'#2C6E8E'},
@@ -285,29 +373,89 @@ const TIER_META = {
   4:{name:'B2 · Upper-Int.', color:'#C6543F'},
   5:{name:'C1 · Advanced', color:'#7B4CC6'}
 };
+const STAGE_META = {
+  basic:{label:'Basic', tiers:[1,2], grid:10, words:12},
+  moderate:{label:'Moderate', tiers:[3,4], grid:12, words:14},
+  advance:{label:'Advance', tiers:[5], grid:14, words:16},
+};
+const STAGE_ORDER = ['basic','moderate','advance'];
+const LEVEL_TO_STAGE = {1:'basic',2:'basic',3:'moderate',4:'moderate',5:'advance'};
+const STAGE_START_LEVEL = {basic:1, moderate:3, advance:5};
 const GRID_SIZE = {1:8,2:10,3:12,4:14,5:16};
-const WORDS_PER_ROUND = {1:6,2:8,3:10,4:10,5:12};
+const WORDS_PER_ROUND = {1:8,2:10,3:12,4:12,5:14};
 
-let ALL_WORDS = []; // flattened {word,def,tier}
-Object.keys(WORD_BANK).forEach(t=>{
-  WORD_BANK[t].forEach(([w,d])=>ALL_WORDS.push({word:w.toUpperCase(),def:d,tier:+t}));
-});
+function normalizeLevel(rawLevel){
+  if(rawLevel === undefined || rawLevel === null) return 1;
+  const value = String(rawLevel).trim().toLowerCase();
+  if(/^[1-5]$/.test(value)) return +value;
+  const map = {a1:1,a2:2,b1:3,b2:4,c1:5};
+  return map[value] || 1;
+}
+function normalizeWordList(){
+  const sourceList = typeof WORD_LIST !== 'undefined' ? WORD_LIST : null;
+  if(Array.isArray(sourceList)){
+    return sourceList
+      .map(item=>({
+        word:String(item.word || '').trim().toUpperCase(),
+        level:normalizeLevel(item.level),
+        definitionUrl:String(item.definitionUrl || item.definition_url || '').trim(),
+      }))
+      .filter(item=>item.word && item.level >= 1 && item.level <= 5);
+  }
+  const legacyBank = typeof WORD_BANK !== 'undefined' ? WORD_BANK : null;
+  const out = [];
+  if(legacyBank && typeof legacyBank === 'object'){
+    Object.keys(legacyBank).forEach(t=>{
+      (legacyBank[t] || []).forEach(entry=>{
+        if(Array.isArray(entry)){
+          const [word, legacyDef] = entry;
+          out.push({word:String(word || '').trim().toUpperCase(), level:normalizeLevel(t), definitionUrl:'', definitionText:String(legacyDef || '')});
+        } else if(entry && typeof entry === 'object') {
+          out.push({word:String(entry.word || '').trim().toUpperCase(), level:normalizeLevel(entry.level || t), definitionUrl:String(entry.definitionUrl || entry.definition_url || ''), definitionText:String(entry.definition || '')});
+        }
+      });
+    });
+  }
+  return out.filter(item=>item.word && item.level >= 1 && item.level <= 5);
+}
+
+let ALL_WORDS = normalizeWordList();
 const TOTAL_WORDS = ALL_WORDS.length;
+
+function stageForLevel(level){ return LEVEL_TO_STAGE[level] || 'basic'; }
+function activeStage(){ return STATE.stage && STAGE_META[STATE.stage] ? STATE.stage : stageForLevel(STATE.level); }
+function activeStageLevels(){ return (STAGE_META[activeStage()] || STAGE_META.basic).tiers.slice(); }
+function stageWords(stage=activeStage()){
+  const levels = (STAGE_META[stage] || STAGE_META.basic).tiers;
+  return ALL_WORDS.filter(w=>levels.includes(w.level));
+}
+function stageWordCount(stage=activeStage()){ return stageWords(stage).length; }
+function stageTotalMastered(stage=activeStage()){
+  return stageWords(stage).filter(w=>STATE.mastery[w.word] && STATE.mastery[w.word].mastered).length;
+}
 
 /* ================= STATE ================= */
 const DEFAULT_STATE = {
   mastery:{}, // word -> {seen,fastCount,lastSeen,mastered,dueDate,tier}
-  level:1, streak:0, lastPlayDate:null,
-  settings:{theme:'light', sound:true, hints:true, directions:4, wordCount:null, timerSec:120},
+  level:1,
+  stage:'basic',
+  streak:0, lastPlayDate:null,
+  settings:{theme:'light', sound:true, hints:true, directions:4, wordCount:null, timerSec:120, fetchDefinitions:false},
   dayLog:{}, // 'YYYY-MM-DD' -> wordsFound count
-  achievements:[]
+  achievements:[],
+  stageStats:{},
+  defCache:{} // word -> {text,source,url,updated}
 };
 function loadState(){
   try{
     const raw = localStorage.getItem('wordgrid_state_v1');
     if(!raw) return structuredClone(DEFAULT_STATE);
     const parsed = JSON.parse(raw);
-    return Object.assign(structuredClone(DEFAULT_STATE), parsed, {settings:Object.assign({},DEFAULT_STATE.settings,parsed.settings||{})});
+    const merged = Object.assign(structuredClone(DEFAULT_STATE), parsed, {settings:Object.assign({},DEFAULT_STATE.settings,parsed.settings||{})});
+    merged.stage = STAGE_META[merged.stage] ? merged.stage : stageForLevel(merged.level || 1);
+    merged.level = Math.min(Math.max(normalizeLevel(merged.level || STAGE_START_LEVEL[merged.stage]), 1), 5);
+    if(!merged.stageStats || typeof merged.stageStats !== 'object') merged.stageStats = {};
+    return merged;
   }catch(e){ return structuredClone(DEFAULT_STATE); }
 }
 let STATE = loadState();
@@ -337,6 +485,122 @@ function beep(freq=520,dur=0.09,type='sine',vol=0.05){
   }catch(e){}
 }
 
+/* ====== Definition fetching & parsing ====== */
+function parseDefinitionFromHtml(html){
+  try{
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const el = doc.querySelector('.def, span.def, div.def, .def');
+    if(el) return el.textContent.trim();
+    // try some common container selectors used by online dictionaries
+    const alt = doc.querySelector('[data-def], .definition, .entry > .def');
+    return alt ? alt.textContent.trim() : null;
+  }catch(e){ return null; }
+}
+
+async function fetchWithTimeout(url, timeout=8000){
+  const ac = new AbortController();
+  const id = setTimeout(()=>ac.abort(), timeout);
+  try{
+    const res = await fetch(url, {signal: ac.signal});
+    clearTimeout(id);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.text();
+  }catch(err){ clearTimeout(id); throw err; }
+}
+
+// SECURITY_NOTE: Dictionary API is free, public, and CORS-enabled. No authentication needed.
+async function fetchDefinitionFromDictAPI(word, retries = 2) {
+  if (!word) return null;
+  STATE.defCache = STATE.defCache || {};
+  const normalizedWord = String(word).trim().toLowerCase();
+  const key = normalizedWord.toUpperCase();
+  if (STATE.defCache[key]) return STATE.defCache[key];
+  
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const encodedWord = encodeURIComponent(normalizedWord);
+      const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodedWord}`;
+      const response = await fetchWithTimeout(url, 9000);
+      const data = JSON.parse(response);
+      
+      if (Array.isArray(data) && data.length > 0) {
+        const entry = data[0];
+        if (entry.meanings && entry.meanings.length > 0) {
+          const definitions = entry.meanings[0].definitions;
+          if (definitions && definitions.length > 0) {
+            const definition = definitions[0].definition || '';
+            const cached = {
+              text: definition,
+              source: url,
+              url: url,
+              updated: todayStr()
+            };
+            STATE.defCache[key] = cached;
+            saveState();
+            return cached;
+          }
+        }
+      }
+      return null;
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        // Wait before retry
+        await new Promise(r => setTimeout(r, 500 + (attempt * 300)));
+      }
+    }
+  }
+  console.warn('Definition fetch from API failed after', retries + 1, 'attempts for', normalizedWord, lastError?.message || lastError);
+  return null;
+}
+
+async function parseAndStoreDefinition(wordObj){
+  if(!wordObj || !wordObj.word) return null;
+  STATE.defCache = STATE.defCache || {};
+  const key = wordObj.word;
+  if(STATE.defCache[key]) return STATE.defCache[key];
+  const url = wordObj.definitionUrl;
+  if(!url) return null;
+  try{
+    const html = await fetchWithTimeout(url, 9000);
+    const text = parseDefinitionFromHtml(html) || '';
+    const entry = {text, source:url, url, updated: todayStr()};
+    STATE.defCache[key] = entry; saveState();
+    return entry;
+  }catch(err){
+    // Likely CORS or network error; keep silent and continue
+    console.warn('Definition fetch failed for', key, err.message||err);
+    return null;
+  }
+}
+
+async function preloadDefinitions(limit=30){
+  if(!STATE.settings.fetchDefinitions) return;
+  const candidates = ALL_WORDS.filter(w=>w.definitionUrl && !(STATE.defCache && STATE.defCache[w.word])).slice(0, limit);
+  for(const w of candidates){
+    try{ await parseAndStoreDefinition(w); }catch(e){}
+    // small delay to be gentle
+    await new Promise(r=>setTimeout(r, 220));
+  }
+}
+
+async function preloadRoundDefinitions() {
+  if (!round || !round.placed) return;
+  // Preload definitions for all words in current round in background
+  const words = round.placed;
+  for (const wordObj of words) {
+    if (!STATE.defCache || !STATE.defCache[wordObj.word]) {
+      // Fire and forget - don't await, just send the request
+      fetchDefinitionFromDictAPI(wordObj.word, 2).catch(err => {
+        console.warn('Background preload failed for', wordObj.word, err);
+      });
+      // Small delay between requests to avoid rate limiting
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
+}
+
 /* ================= MASTERY / SRS ================= */
 function getMastery(word){
   if(!STATE.mastery[word]) STATE.mastery[word] = {seen:0,fastCount:0,lastSeen:null,mastered:false,dueDate:null};
@@ -361,27 +625,59 @@ function recordMiss(wordObj){
   const m = getMastery(wordObj.word);
   m.dueDate = new Date(Date.now()+86400000).toISOString().slice(0,10);
 }
-function masteredCount(){ return Object.values(STATE.mastery).filter(m=>m.mastered).length; }
+function masteredCount(){ return stageWords().filter(w=>STATE.mastery[w.word] && STATE.mastery[w.word].mastered).length; }
 function dueWords(){
   const today = todayStr();
-  return ALL_WORDS.filter(w=>{
+  return stageWords().filter(w=>{
     const m = STATE.mastery[w.word];
     return m && !m.mastered && m.dueDate && m.dueDate <= today;
   });
 }
 function tierMasteredCount(tier){
-  return ALL_WORDS.filter(w=>w.tier===tier && STATE.mastery[w.word] && STATE.mastery[w.word].mastered).length;
+  return stageWords().filter(w=>w.level===tier && STATE.mastery[w.word] && STATE.mastery[w.word].mastered).length;
 }
-function tierTotal(tier){ return ALL_WORDS.filter(w=>w.tier===tier).length; }
+function tierTotal(tier){ return stageWords().filter(w=>w.level===tier).length; }
 function maybeAdvanceLevel(){
   const cur = STATE.level;
-  if(cur>=5) return;
+  const stageLevels = activeStageLevels();
+  const maxTier = Math.max(...stageLevels);
+  if(cur>=maxTier) return;
   const total = tierTotal(cur);
   const mastered = tierMasteredCount(cur);
   if(total>0 && mastered/total >= 0.7){
     STATE.level = cur+1;
     unlockAchievement('band'+STATE.level, `${TIER_META[STATE.level].name} unlocked!`);
   }
+}
+
+function stageDefaultLevel(){
+  return STAGE_START_LEVEL[activeStage()] || 1;
+}
+function stageDefaultSize(){
+  return (STAGE_META[activeStage()] || STAGE_META.basic).grid;
+}
+function stageDefaultCount(){
+  return (STAGE_META[activeStage()] || STAGE_META.basic).words;
+}
+function pickStageWords(tier, count, rng=Math.random){
+  const allowed = stageWords();
+  const focus = allowed.filter(w=>w.level===tier);
+  const due = focus.filter(w=>{ const m=STATE.mastery[w.word]; return m && !m.mastered && m.dueDate && m.dueDate<=todayStr(); });
+  const unseen = focus.filter(w=>!STATE.mastery[w.word] || STATE.mastery[w.word].seen===0);
+  const rest = focus.filter(w=>!due.includes(w) && !unseen.includes(w));
+  const other = allowed.filter(w=>w.level!==tier);
+  const otherDue = other.filter(w=>{ const m=STATE.mastery[w.word]; return m && !m.mastered && m.dueDate && m.dueDate<=todayStr(); });
+  const otherUnseen = other.filter(w=>!STATE.mastery[w.word] || STATE.mastery[w.word].seen===0);
+  const otherRest = other.filter(w=>!otherDue.includes(w) && !otherUnseen.includes(w));
+  const pool = [
+    ...shuffle(due, rng),
+    ...shuffle(unseen, rng),
+    ...shuffle(rest, rng),
+    ...shuffle(otherDue, rng),
+    ...shuffle(otherUnseen, rng),
+    ...shuffle(otherRest, rng),
+  ];
+  return pool.slice(0, count);
 }
 
 /* ================= ACHIEVEMENTS ================= */
@@ -469,16 +765,6 @@ let round = null; // {grid,placed,size,foundSet,startTime,wordTimers,mode}
 let selecting = false, selStart=null, selCur=null;
 let roundTimerInterval=null, roundTimeLeft=0;
 
-function wordPoolForLevel(level, count, opts={}){
-  const tierWords = ALL_WORDS.filter(w=>w.tier===level);
-  // weight due words first, then unseen, then random
-  const due = tierWords.filter(w=>{const m=STATE.mastery[w.word]; return m && !m.mastered && m.dueDate && m.dueDate<=todayStr();});
-  const unseen = tierWords.filter(w=>!STATE.mastery[w.word] || STATE.mastery[w.word].seen===0);
-  const rest = tierWords.filter(w=>!due.includes(w) && !unseen.includes(w));
-  const pool = shuffle([...shuffle(due), ...shuffle(unseen), ...shuffle(rest)]);
-  return pool.slice(0,count);
-}
-
 function startRound(mode){
   currentMode = mode;
   document.querySelectorAll('.mode-pill').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
@@ -487,38 +773,39 @@ function startRound(mode){
   const timerTag = document.getElementById('timerTag');
 
   let level = STATE.level;
-  let size = GRID_SIZE[level];
-  let count = STATE.settings.wordCount || WORDS_PER_ROUND[level];
+  let size = stageDefaultSize();
+  let count = STATE.settings.wordCount || stageDefaultCount();
   let words, rng = Math.random;
 
   if(mode==='review'){
     let due = dueWords();
     if(due.length < 4){
-      const struggling = ALL_WORDS.filter(w=>STATE.mastery[w.word] && !STATE.mastery[w.word].mastered);
+      const struggling = stageWords().filter(w=>STATE.mastery[w.word] && !STATE.mastery[w.word].mastered);
       due = shuffle([...due, ...struggling]).slice(0, Math.max(6,due.length));
     }
     words = shuffle(due).slice(0, Math.min(count, Math.max(due.length,4)));
-    if(words.length<4){ words = wordPoolForLevel(level, count); }
-    size = Math.max(10, GRID_SIZE[level]);
+    if(words.length<4){ words = pickStageWords(level, count); }
+    size = Math.max(10, GRID_SIZE[level] || stageDefaultSize());
   } else if(mode==='daily'){
     const seed = parseInt(todayStr().replaceAll('-',''),10);
     rng = seededRandom(seed);
-    const pool = shuffle(ALL_WORDS.filter(w=>w.tier<=Math.max(2,level)), rng);
-    words = pool.slice(0,10);
-    size = 12;
+    const pool = shuffle(stageWords(), rng);
+    words = pool.slice(0, Math.min(stageDefaultCount(), pool.length));
+    size = stageDefaultSize();
   } else if(mode==='custom'){
-    const t = STATE._customTier || level;
-    const cSize = STATE._customSize || GRID_SIZE[level];
-    const cCount = STATE._customCount || WORDS_PER_ROUND[level];
-    words = wordPoolForLevel(t, cCount);
+    const stageTiers = activeStageLevels();
+    const t = stageTiers.includes(STATE._customTier) ? STATE._customTier : level;
+    const cSize = STATE._customSize || GRID_SIZE[level] || stageDefaultSize();
+    const cCount = STATE._customCount || WORDS_PER_ROUND[level] || stageDefaultCount();
+    words = pickStageWords(t, cCount, rng);
     size = cSize; level = t;
   } else if(mode==='timed'){
-    words = wordPoolForLevel(level, count);
+    words = pickStageWords(level, count, rng);
   } else { // learn
-    words = wordPoolForLevel(level, count);
+    words = pickStageWords(level, count, rng);
   }
 
-  if(words.length===0) words = shuffle(ALL_WORDS).slice(0,count);
+  if(words.length===0) words = shuffle(stageWords(), rng).slice(0,count);
 
   const gen = generateGrid(size, words, STATE.settings.directions, rng);
   round = {
@@ -526,7 +813,7 @@ function startRound(mode){
     startTime: Date.now(), wordStart: Date.now(), mode
   };
 
-  document.getElementById('roundBandTag').textContent = mode==='daily' ? '📅 Daily Puzzle' : mode==='review' ? '🔁 Review' : `${TIER_META[level].name}`;
+  document.getElementById('roundBandTag').textContent = mode==='daily' ? '📅 Daily Puzzle' : mode==='review' ? '🔁 Review' : `${STAGE_META[activeStage()].label} · ${TIER_META[level].name}`;
 
   if(mode==='timed'){
     roundTimeLeft = STATE.settings.timerSec;
@@ -541,6 +828,8 @@ function startRound(mode){
   }
 
   renderGrid(); renderWordList();
+  // Preload definitions for current round in background
+  preloadRoundDefinitions().catch(err => console.warn('Preload error:', err));
 }
 function updateTimerTag(){
   const t = document.getElementById('timerTag');
@@ -571,7 +860,7 @@ function renderWordList(){
   round.placed.forEach(w=>{
     const tag=document.createElement('div');
     tag.className='word-tag'+(round.foundSet.has(w.word)?' found':'');
-    tag.textContent = STATE.settings.hints ? `${w.word.toLowerCase()} · ${w.def}` : w.word.toLowerCase();
+    tag.textContent = w.word.toLowerCase();
     tag.dataset.word = w.word;
     el.appendChild(tag);
   });
@@ -656,7 +945,9 @@ function markFound(word, cells){
   });
   beep(660,0.1,'triangle',0.05);
   renderWordList();
-  showToast(word.word.charAt(0)+word.word.slice(1).toLowerCase(), word.def);
+  showToast('Word found', word.word.charAt(0)+word.word.slice(1).toLowerCase());
+  showDefinitionPrompt(word);
+  launchCelebration();
   saveState();
   if(round.foundSet.size >= round.placed.length){
     setTimeout(()=>endRound(true), 500);
@@ -664,10 +955,86 @@ function markFound(word, cells){
 }
 function showToast(title, body){
   const t = document.getElementById('defToast');
-  t.innerHTML = `<b>${title}</b><br>${body}`;
+  t.replaceChildren();
+  const titleEl = document.createElement('b');
+  titleEl.textContent = title;
+  const bodyEl = document.createElement('div');
+  bodyEl.textContent = body;
+  t.append(titleEl, document.createElement('br'), bodyEl);
   t.classList.add('show');
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function showDefinitionPrompt(word){
+  const popup = document.getElementById('definitionPopup');
+  const title = document.getElementById('definitionPopupTitle');
+  const copy = document.getElementById('definitionPopupCopy');
+  popup.dataset.url = word.definitionUrl || '';
+  title.textContent = word.word.charAt(0)+word.word.slice(1).toLowerCase();
+  const cached = STATE.defCache && STATE.defCache[word.word];
+  const viewBtn = document.getElementById('definitionViewBtn');
+  const ignoreBtn = document.getElementById('definitionIgnoreBtn');
+  
+  if(cached && cached.text){
+    copy.textContent = cached.text;
+  } else if(STATE.settings.hints){
+    // Fetch from Dictionary API when hints are enabled
+    copy.textContent = 'Loading definition…';
+    fetchDefinitionFromDictAPI(word.word).then(entry=>{
+      if(entry && entry.text){ copy.textContent = entry.text; }
+      else { copy.textContent = 'No definition available.'; }
+    }).catch(()=>{ copy.textContent = 'No definition available.'; });
+  } else if(word.definitionUrl){
+    copy.textContent = 'Definition available — click View to open.';
+    if(STATE.settings.fetchDefinitions){
+      parseAndStoreDefinition(word).then(entry=>{
+        if(entry && entry.text){ copy.textContent = entry.text; }
+        else { copy.textContent = 'No definition available.'; }
+      }).catch(()=>{ copy.textContent = 'No definition available.'; });
+    }
+  } else {
+    copy.textContent = 'No definition available.';
+  }
+  // show popup, re-enable view/ignore controls
+  if(viewBtn) viewBtn.style.display = word.definitionUrl ? 'inline-flex' : 'none';
+  if(ignoreBtn) ignoreBtn.style.display = 'inline-flex';
+  if(viewBtn) viewBtn.onclick = ()=>{ if(word.definitionUrl){ window.open(word.definitionUrl, '_blank', 'noopener,noreferrer'); } closeDefinitionPopup(); };
+  if(ignoreBtn) ignoreBtn.onclick = ()=>{ closeDefinitionPopup(); };
+  popup.hidden = false; popup.classList.add('show');
+  clearTimeout(showDefinitionPrompt._tm);
+}
+function closeDefinitionPopup(){
+  const popup = document.getElementById('definitionPopup');
+  if(popup){
+    popup.classList.remove('show');
+    popup.hidden = true;
+  }
+}
+document.addEventListener('click', e=>{
+  const popup = document.getElementById('definitionPopup');
+  if(popup && popup.classList.contains('show') && !popup.contains(e.target) && e.target.id!=='letterGrid'){
+    closeDefinitionPopup();
+  }
+});
+
+function launchCelebration(){
+  const layer = document.getElementById('celebrationLayer');
+  if(!layer) return;
+  const colors = ['var(--teal)', 'var(--amber)', 'var(--green)', 'var(--red)'];
+  const pieces = [];
+  for(let i=0;i<18;i++){
+    const piece = document.createElement('span');
+    piece.className = 'confetti';
+    piece.style.setProperty('--x', `${Math.random()*100}%`);
+    piece.style.setProperty('--dx', `${(Math.random()*2-1)*140}px`);
+    piece.style.setProperty('--r', `${(Math.random()*720-360)}deg`);
+    piece.style.setProperty('--d', `${0.9 + Math.random()*0.8}s`);
+    piece.style.setProperty('--c', colors[i % colors.length]);
+    pieces.push(piece);
+  }
+  layer.replaceChildren(...pieces);
+  clearTimeout(launchCelebration._tm);
+  launchCelebration._tm = setTimeout(()=>layer.replaceChildren(), 1800);
 }
 function endRound(completed){
   clearInterval(roundTimerInterval);
@@ -678,17 +1045,23 @@ function endRound(completed){
   STATE.dayLog[today] = (STATE.dayLog[today]||0) + round.foundSet.size;
   const totalTime = (Date.now()-round.startTime)/1000;
   STATE._lastRoundFast = round.placed.length>0 && (totalTime/round.placed.length) < 4;
+  STATE.stageStats[activeStage()] = {
+    best: Math.max((STATE.stageStats[activeStage()] && STATE.stageStats[activeStage()].best) || 0, round.foundSet.size),
+    lastRound: round.foundSet.size,
+    lastPlayed: today,
+  };
   maybeAdvanceLevel();
   checkAchievements();
   saveState();
   refreshHeader();
   beep(880,0.15,'sine',0.06);
+  launchCelebration();
   showToast(completed? '🎉 Round complete!' : '⏱ Time up!', `Found ${round.foundSet.size} / ${round.placed.length} words`);
 }
 
 /* ================= RENDER: HEADER / DASH / JOURNAL / SETTINGS ================= */
 function refreshHeader(){
-  document.getElementById('bandLabel').textContent = TIER_META[STATE.level].name;
+  document.getElementById('bandLabel').textContent = `${STAGE_META[activeStage()].label} · ${TIER_META[STATE.level].name}`;
   document.getElementById('statMastered').textContent = masteredCount();
   document.getElementById('statStreak').textContent = STATE.streak;
   document.getElementById('statDue').textContent = dueWords().length;
@@ -696,10 +1069,11 @@ function refreshHeader(){
 }
 function renderDashboard(){
   const m = masteredCount();
-  document.getElementById('dashNum').textContent = `${m} / ${TOTAL_WORDS}`;
-  document.getElementById('dashBar').style.width = Math.min(100,(m/TOTAL_WORDS*100)).toFixed(1)+'%';
+  const total = stageWordCount();
+  document.getElementById('dashNum').textContent = `${m} / ${total}`;
+  document.getElementById('dashBar').style.width = Math.min(100,(total ? (m/total*100) : 0)).toFixed(1)+'%';
   const tb = document.getElementById('tierBreakdown'); tb.innerHTML='';
-  for(let t=1;t<=5;t++){
+  activeStageLevels().forEach(t=>{
     const total = tierTotal(t), mm = tierMasteredCount(t);
     const row = document.createElement('div'); row.className='tier-row';
     row.innerHTML = `<span class="tier-dot" style="background:${TIER_META[t].color}"></span>
@@ -707,7 +1081,7 @@ function renderDashboard(){
       <div class="mini-bar"><div style="width:${total?(mm/total*100):0}%;background:${TIER_META[t].color}"></div></div>
       <span class="tcount mono">${mm}/${total}</span>`;
     tb.appendChild(row);
-  }
+  });
   drawChart();
   const ag = document.getElementById('achGrid'); ag.innerHTML='';
   ACHIEVEMENT_DEFS.forEach(a=>{
@@ -753,8 +1127,8 @@ function renderJournalFilters(){
 }
 function renderJournal(){
   const el = document.getElementById('journalList'); el.innerHTML='';
-  let list = ALL_WORDS.filter(w=>STATE.mastery[w.word] && STATE.mastery[w.word].seen>0);
-  if(journalFilter!=='all') list = list.filter(w=>w.tier==journalFilter);
+  let list = stageWords().filter(w=>STATE.mastery[w.word] && STATE.mastery[w.word].seen>0);
+  if(journalFilter!=='all') list = list.filter(w=>w.level==journalFilter);
   if(journalQuery) list = list.filter(w=>w.word.toLowerCase().includes(journalQuery.toLowerCase()));
   list.sort((a,b)=>a.word.localeCompare(b.word));
   if(list.length===0){ el.innerHTML = `<div class="empty">No words encountered yet — play a round to start your journal.</div>`; return; }
@@ -763,32 +1137,34 @@ function renderJournal(){
     const badge = m.mastered ? 'mastered' : (m.seen>1?'learning':'new');
     const badgeLabel = m.mastered?'Mastered':(m.seen>1?'Learning':'New');
     const div = document.createElement('div'); div.className='j-item';
-    div.innerHTML = `<div><div class="w">${w.word.charAt(0)+w.word.slice(1).toLowerCase()}</div><div class="d">${w.def}</div></div><span class="j-badge ${badge}">${badgeLabel}</span>`;
+    div.innerHTML = `<div><div class="w">${w.word.charAt(0)+w.word.slice(1).toLowerCase()}</div><div class="d">${TIER_META[w.level].name}</div></div><span class="j-badge ${badge}">${badgeLabel}</span>`;
     el.appendChild(div);
   });
 }
 function renderSettings(){
   document.getElementById('setHints').classList.toggle('on', STATE.settings.hints);
   document.getElementById('setDirections').value = STATE.settings.directions;
-  document.getElementById('setWordCount').value = STATE.settings.wordCount || WORDS_PER_ROUND[STATE.level];
+  document.getElementById('setWordCount').value = STATE.settings.wordCount || stageDefaultCount();
   document.getElementById('setTimerSec').value = STATE.settings.timerSec;
   document.getElementById('setDark').classList.toggle('on', STATE.settings.theme==='dark');
   document.getElementById('setSound').classList.toggle('on', STATE.settings.sound);
+  const sf = document.getElementById('setFetchDefs'); if(sf) sf.classList.toggle('on', !!STATE.settings.fetchDefinitions);
 }
 function renderCustomControls(){
   const el = document.getElementById('customControls');
+  const stageLevels = activeStageLevels();
   el.innerHTML = `
     <div class="field-row"><label>Band</label>
-      <select id="cTier">${[1,2,3,4,5].map(t=>`<option value="${t}">${TIER_META[t].name}</option>`).join('')}</select>
+      <select id="cTier">${stageLevels.map(t=>`<option value="${t}">${TIER_META[t].name}</option>`).join('')}</select>
     </div>
     <div class="field-row"><label>Grid size</label>
       <select id="cSize">${[8,10,12,14,16,18].map(s=>`<option value="${s}">${s}×${s}</option>`).join('')}</select>
     </div>
     <div class="field-row"><label>Words</label><input type="number" id="cCount" min="4" max="16" value="8" style="width:60px;"></div>
     <button class="btn btn-primary" style="width:100%;margin-top:8px;" id="cApply">Apply & shuffle</button>`;
-  document.getElementById('cTier').value = STATE._customTier||STATE.level;
-  document.getElementById('cSize').value = STATE._customSize||GRID_SIZE[STATE.level];
-  document.getElementById('cCount').value = STATE._customCount||WORDS_PER_ROUND[STATE.level];
+  document.getElementById('cTier').value = stageLevels.includes(STATE._customTier) ? STATE._customTier : STATE.level;
+  document.getElementById('cSize').value = STATE._customSize||stageDefaultSize()||GRID_SIZE[STATE.level];
+  document.getElementById('cCount').value = STATE._customCount||stageDefaultCount()||WORDS_PER_ROUND[STATE.level];
   document.getElementById('cApply').onclick = ()=>{
     STATE._customTier = +document.getElementById('cTier').value;
     STATE._customSize = +document.getElementById('cSize').value;
@@ -834,6 +1210,7 @@ document.getElementById('setWordCount').onchange = e=>{ STATE.settings.wordCount
 document.getElementById('setTimerSec').onchange = e=>{ STATE.settings.timerSec=+e.target.value; saveState(); };
 document.getElementById('setDark').onclick = ()=>{ toggleTheme(); renderSettings(); };
 document.getElementById('setSound').onclick = e=>{ STATE.settings.sound=!STATE.settings.sound; saveState(); renderSettings(); updateSoundIcon(); };
+document.getElementById('setFetchDefs').onclick = e=>{ STATE.settings.fetchDefinitions=!STATE.settings.fetchDefinitions; saveState(); renderSettings(); if(STATE.settings.fetchDefinitions) preloadDefinitions(40); };
 document.getElementById('resetBtn').onclick = ()=>{
   if(confirm('This will permanently erase all progress, mastery data, and stats. Continue?')){
     STATE = structuredClone(DEFAULT_STATE);
@@ -878,9 +1255,68 @@ document.getElementById('soundBtn').onclick = ()=>{ STATE.settings.sound=!STATE.
 /* ================= INIT ================= */
 function init(){
   applyTheme(); updateSoundIcon(); refreshHeader(); renderModeRow(); renderCustomControls();
-  startRound('learn');
+  renderSettings();
+  showStagePicker();
+  // kick off background definition preload if enabled
+  try{ preloadDefinitions(60); }catch(e){}
 }
 init();
+
+/* =================== Test Runner (in-page) =================== */
+class TestRunner{
+  static report(results){
+    const id='testReportBox'; let box=document.getElementById(id);
+    if(!box){ box=document.createElement('div'); box.id=id; box.style.position='fixed'; box.style.right='12px'; box.style.bottom='12px'; box.style.zIndex=120; box.style.background='var(--paper-panel)'; box.style.color='var(--ink)'; box.style.border='1px solid var(--line)'; box.style.borderRadius='10px'; box.style.padding='10px 12px'; box.style.boxShadow='0 12px 30px rgba(0,0,0,.18)'; document.body.appendChild(box); }
+    box.innerHTML = `<strong>Tests</strong><div style="font-family:monospace;margin-top:6px;">${results.map(r=> (r.ok? '✅':'❌')+' '+r.name+' - '+r.msg).join('<br>')}</div>`;
+  }
+  static async runAll(){
+    const results = [];
+    // test 1: confetti launch
+    try{ launchCelebration(); const layer=document.getElementById('celebrationLayer'); const ok = layer && layer.children.length>0; results.push({name:'confetti-launch', ok, msg: ok? 'layer has pieces':'no pieces created'}); }catch(e){ results.push({name:'confetti-launch', ok:false, msg:String(e)}); }
+    // test 2: parseDefinitionFromHtml
+    try{ const html=`<span class="def">Example definition</span>`; const parsed = parseDefinitionFromHtml(html); const ok = parsed && parsed.includes('Example'); results.push({name:'parse-def', ok, msg: ok? parsed : 'parsing failed'}); }catch(e){ results.push({name:'parse-def', ok:false, msg:String(e)}); }
+    // test 3: theme toggle changes bg
+    try{ const before = getComputedStyle(document.body).backgroundColor; toggleTheme(); const after = getComputedStyle(document.body).backgroundColor; toggleTheme(); const ok = before !== after; results.push({name:'theme-toggle', ok, msg: ok? `${before} -> ${after}` : 'no change'}); }catch(e){ results.push({name:'theme-toggle', ok:false, msg:String(e)}); }
+    this.report(results);
+    return results;
+  }
+}
+
+/* ================= STAGE PICKER ================= */
+function applyStageSelection(stage, startFresh=false){
+  STATE.stage = stage;
+  STATE.level = startFresh ? STAGE_START_LEVEL[stage] : (STATE.level || STAGE_START_LEVEL[stage]);
+  if(!activeStageLevels().includes(STATE.level)) STATE.level = STAGE_START_LEVEL[stage];
+  saveState();
+  refreshHeader();
+  renderCustomControls();
+  renderSettings();
+  hideStagePicker();
+  startRound(currentMode);
+}
+function showStagePicker(){
+  const overlay = document.getElementById('stageOverlay');
+  const grid = document.getElementById('stageGrid');
+  grid.innerHTML = '';
+  STAGE_ORDER.forEach(stage=>{
+    const button = document.createElement('button');
+    button.className = 'stage-card' + (activeStage()===stage ? ' active' : '');
+    const stats = STATE.stageStats && STATE.stageStats[stage] ? STATE.stageStats[stage] : null;
+    button.innerHTML = `<strong>${STAGE_META[stage].label}</strong><small>${stage === 'basic' ? 'A1 + A2' : stage === 'moderate' ? 'B1 + B2' : 'C1'}${stats ? ` · best ${stats.best || 0}` : ''}</small>`;
+    button.onclick = ()=>applyStageSelection(stage, false);
+    grid.appendChild(button);
+  });
+  document.getElementById('resumeStageBtn').textContent = `Continue ${STAGE_META[activeStage()].label}`;
+  document.getElementById('resumeStageBtn').onclick = ()=>applyStageSelection(activeStage(), false);
+  document.getElementById('closeStageBtn').onclick = ()=>applyStageSelection(activeStage(), true);
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+function hideStagePicker(){
+  const overlay = document.getElementById('stageOverlay');
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden', 'true');
+}
 </script>
 </body>
 </html>
